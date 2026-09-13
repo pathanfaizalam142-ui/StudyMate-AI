@@ -1,0 +1,7 @@
+{
+  "name": "StudyMate AI",
+  "description": "A modern, premium AI-powered study assistant for college and school students with exam answer generator, quiz system, notes QA, and personalized study planner.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
