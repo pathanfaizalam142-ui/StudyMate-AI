@@ -156,17 +156,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 soundManager.play('nav_tap');
                 onProfileClick();
               }}
-              title={`${currentUser.name} - GTU BCA Student`}
-              className="flex items-center gap-1.5 p-0.5 sm:p-1 rounded-xl border border-black/10 dark:border-white/10 hover:border-[#004741] active:scale-95 transition-all"
+              title={`${currentUser.name || 'Faiz Alam'} - GTU BCA Student`}
+              className="flex items-center gap-1.5 p-0.5 sm:px-2 sm:py-1 rounded-xl border border-black/10 dark:border-white/10 hover:border-[#004741] active:scale-95 transition-all"
             >
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#004741] text-[#F0EDE4] font-bold text-[10px] sm:text-xs flex items-center justify-center shadow-sm">
-                {currentUser.name
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#004741] text-[#F0EDE4] font-bold text-[10px] sm:text-xs flex items-center justify-center shadow-sm shrink-0">
+                {(currentUser.name || 'Faiz Alam')
                   .split(' ')
                   .map((n) => n[0])
                   .join('')
                   .slice(0, 2)
                   .toUpperCase() || 'FA'}
               </div>
+              <span className="hidden sm:inline text-xs font-bold text-black dark:text-[#F0EDE4] truncate max-w-[110px]">
+                {currentUser.name || 'Faiz Alam'}
+              </span>
             </button>
           ) : (
             <button

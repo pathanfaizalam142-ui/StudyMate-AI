@@ -59,7 +59,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const t = translations[language];
 
   // Editable student profile info
-  const [name, setName] = useState(currentUser?.name || 'Faizan Alam');
+  const [name, setName] = useState(currentUser?.name || 'Faiz Alam');
   const [course, setCourse] = useState(currentUser?.course || 'Bachelor of Computer Applications (BCA)');
   const [college, setCollege] = useState(currentUser?.college || 'Gujarat Technological University (GTU)');
   const [isEditing, setIsEditing] = useState(false);
@@ -97,29 +97,39 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
 
         {currentUser && onLogout ? (
-          <button
-            onClick={() => {
-              soundManager.play('button_click');
-              onLogout();
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 text-xs font-bold transition-all active:scale-95"
-            title="Log Out of StudyMate"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
-          </button>
-        ) : (
-          onOpenAuth && (
+          <div className="flex flex-col items-end gap-1">
             <button
               onClick={() => {
                 soundManager.play('button_click');
-                onOpenAuth();
+                onLogout();
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#004741] text-[#F0EDE4] text-xs font-bold shadow-sm hover:bg-[#003833] transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 text-xs font-bold transition-all active:scale-95"
+              title="Log Out of StudyMate"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>{language === 'hi' ? 'साइन इन करें' : 'Sign In'}</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
             </button>
+            <span className="text-[11px] sm:text-xs font-semibold text-black/75 dark:text-[#F0EDE4]/80 tracking-tight whitespace-nowrap">
+              Developer by Faiz Alam ✅
+            </span>
+          </div>
+        ) : (
+          onOpenAuth && (
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={() => {
+                  soundManager.play('button_click');
+                  onOpenAuth();
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#004741] text-[#F0EDE4] text-xs font-bold shadow-sm hover:bg-[#003833] transition-all active:scale-95"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>{language === 'hi' ? 'साइन इन करें' : 'Sign In'}</span>
+              </button>
+              <span className="text-[11px] sm:text-xs font-semibold text-black/75 dark:text-[#F0EDE4]/80 tracking-tight whitespace-nowrap">
+                Developer by Faiz Alam ✅
+              </span>
+            </div>
           )
         )}
       </div>

@@ -467,8 +467,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                   <span>
                     {language === 'hi'
-                      ? 'डेमो छात्र के रूप में जारी रखें (फैज़ान आलम)'
-                      : 'One-Click Demo Student Access (Faizan Alam)'}
+                      ? 'डेमो छात्र के रूप में जारी रखें (फ़ैज़ आलम)'
+                      : 'One-Click Demo Student Access (Faiz Alam)'}
                   </span>
                 </button>
               </div>
@@ -490,7 +490,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       setName(e.target.value);
                       if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
                     }}
-                    placeholder="Faizan Alam"
+                    placeholder="Faiz Alam"
                     className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border ${
                       errors.name ? 'border-red-500' : 'border-black/15 dark:border-white/15'
                     } text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]`}

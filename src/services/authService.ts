@@ -42,8 +42,8 @@ async function hashPassword(password: string): Promise<string> {
 // Default Seed User: GTU BCA Student
 const DEFAULT_DEMO_USER: User = {
   id: 'usr-gtu-demo-1',
-  name: 'Faizan Alam',
-  email: 'faizan@gtu.ac.in',
+  name: 'Faiz Alam',
+  email: 'faiz@gtu.ac.in',
   college: 'Gujarat Technological University (GTU)',
   course: 'Bachelor of Computer Applications (BCA)',
   semester: 4,
@@ -76,6 +76,15 @@ class AuthService {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && typeof parsed === 'object' && parsed.id && parsed.email) {
+          if (
+            parsed.isDemo ||
+            parsed.id === 'usr-gtu-demo-1' ||
+            parsed.name === 'Faizan Alam' ||
+            parsed.name === 'Faizan Ali'
+          ) {
+            parsed.name = 'Faiz Alam';
+            if (parsed.email === 'faizan@gtu.ac.in') parsed.email = 'faiz@gtu.ac.in';
+          }
           this.currentUser = parsed;
         } else {
           this.currentUser = null;
