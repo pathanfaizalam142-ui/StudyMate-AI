@@ -15,7 +15,8 @@ export type SoundType =
   | 'quiz_completed'
   | 'ai_response_ready'
   | 'upload_completed'
-  | 'toggle';
+  | 'toggle'
+  | 'error';
 
 class SoundService {
   private ctx: AudioContext | null = null;
@@ -194,7 +195,8 @@ class SoundService {
           break;
         }
 
-        case 'wrong_quiz': {
+        case 'wrong_quiz':
+        case 'error': {
           // Soft, non-jarring low tone
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();

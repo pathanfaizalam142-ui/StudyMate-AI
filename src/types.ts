@@ -1,16 +1,81 @@
 export type NavigationTab =
   | 'home'
   | 'gtu_bca'
+  | 'question_papers'
   | 'ask_ai'
   | 'exam_mode'
   | 'quiz'
   | 'notes_upload'
   | 'study_plan'
   | 'saved'
-  | 'profile';
+  | 'profile'
+  | 'auth';
 
 export type AppLanguage = 'en' | 'hi';
 export type AppTheme = 'light' | 'dark';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  college?: string;
+  course?: string;
+  semester?: number | string;
+  enrollmentNo?: string;
+  avatarSeed?: string;
+  createdAt?: string;
+  isDemo?: boolean;
+}
+
+export type GTUExamSession = 'Summer' | 'Winter' | 'Remedial';
+
+export interface GTUPaperQuestion {
+  qNumber: string; // e.g. "Q.1 (a)"
+  text: string;
+  marks: number;
+  orQuestion?: {
+    qNumber: string;
+    text: string;
+    marks: number;
+  };
+}
+
+export interface GTUPaperSection {
+  title: string;
+  instructions?: string;
+  questions: GTUPaperQuestion[];
+}
+
+export interface GTUPaperDocument {
+  university: string;
+  degree: string;
+  semester: number;
+  examSession: string; // e.g. "Summer 2026 Examination"
+  subjectCode: string;
+  subjectName: string;
+  date?: string;
+  time?: string;
+  totalMarks: number;
+  instructions: string[];
+  sections: GTUPaperSection[];
+}
+
+export interface GTUQuestionPaper {
+  id: string;
+  semester: number;
+  year: number;
+  exam: GTUExamSession;
+  subject: string;
+  subjectCode: string;
+  pdfUrl?: string;
+  fileName: string;
+  isAvailable: boolean;
+  totalPages?: number;
+  fileSize?: string;
+  paperContent?: GTUPaperDocument;
+  uploadedAt?: string;
+  published: boolean;
+}
 
 export interface SubjectItem {
   id: string;

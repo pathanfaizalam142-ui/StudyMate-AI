@@ -8,10 +8,12 @@ import {
   Flame,
   Bell,
   Sparkles,
-  BookOpen
+  BookOpen,
+  User as UserIcon,
+  LogIn,
 } from 'lucide-react';
 import { soundManager } from '../services/soundManager';
-import { AppLanguage, AppTheme } from '../types';
+import { AppLanguage, AppTheme, User } from '../types';
 
 interface NavbarProps {
   language: AppLanguage;
@@ -23,7 +25,9 @@ interface NavbarProps {
   streakDays: number;
   onNotificationClick: () => void;
   onProfileClick: () => void;
+  onOpenAuth?: () => void;
   activeTab: string;
+  currentUser?: User | null;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -36,6 +40,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   streakDays,
   onNotificationClick,
   onProfileClick,
+  onOpenAuth,
+  currentUser,
 }) => {
   return (
     <header
@@ -142,20 +148,44 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#004741]" />
           </button>
 
-          {/* User Profile Avatar Link */}
-          <button
-            id="user-avatar-btn"
-            onClick={() => {
-              soundManager.play('nav_tap');
-              onProfileClick();
-            }}
-            title="Open Profile"
-            className="flex items-center p-0.5 sm:p-1 rounded-xl border border-black/10 dark:border-white/10 hover:border-[#004741] active:scale-95 transition-all"
-          >
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#004741] text-[#F0EDE4] font-bold text-[10px] sm:text-xs flex items-center justify-center">
-              FA
-            </div>
-          </button>
+          {/* User Profile Avatar Link / Sign In */}
+          {currentUser ? (
+            <button
+              id="user-avatar-btn"
+              onClick={() => {
+                soundManager.play('nav_tap');
+                onProfileClick();
+              }}
+              title={`${currentUser.name} - GTU BCA Student`}
+              className="flex items-center gap-1.5 p-0.5 sm:p-1 rounded-xl border border-black/10 dark:border-white/10 hover:border-[#004741] active:scale-95 transition-all"
+            >
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#004741] text-[#F0EDE4] font-bold text-[10px] sm:text-xs flex items-center justify-center shadow-sm">
+                {currentUser.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase() || 'FA'}
+              </div>
+            </button>
+          ) : (
+            <button
+              id="user-login-btn"
+              onClick={() => {
+                soundManager.play('button_click');
+                if (onOpenAuth) {
+                  onOpenAuth();
+                } else {
+                  onProfileClick();
+                }
+              }}
+              title="Sign In to StudyMate AI"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#004741] hover:bg-[#003833] text-[#F0EDE4] text-xs font-bold transition-all shadow-sm active:scale-95"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{language === 'hi' ? 'लॉग इन' : 'Sign In'}</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

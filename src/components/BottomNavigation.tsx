@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, GraduationCap, MessageSquare, Award, Bookmark, User } from 'lucide-react';
+import { Home, GraduationCap, FileText, MessageSquare, Bookmark, User } from 'lucide-react';
 import { soundManager } from '../services/soundManager';
 import { NavigationTab, AppLanguage } from '../types';
 import { translations } from '../services/i18n';
@@ -20,9 +20,10 @@ export const BottomNavigation: React.FC<BottomNavProps> = ({
   const items = [
     { id: 'home' as NavigationTab, label: t.navHome, icon: Home },
     { id: 'gtu_bca' as NavigationTab, label: t.navGtuBca, icon: GraduationCap },
+    { id: 'question_papers' as NavigationTab, label: language === 'hi' ? 'पेपर' : 'Papers', icon: FileText },
     { id: 'ask_ai' as NavigationTab, label: t.navAskAI, icon: MessageSquare },
-    { id: 'quiz' as NavigationTab, label: t.navQuiz, icon: Award },
     { id: 'saved' as NavigationTab, label: t.navSaved, icon: Bookmark },
+    { id: 'profile' as NavigationTab, label: t.navProfile, icon: User },
   ];
 
   return (

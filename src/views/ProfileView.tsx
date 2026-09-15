@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  User,
+  User as UserIcon,
   GraduationCap,
   Award,
   Bookmark,
@@ -16,9 +16,13 @@ import {
   ShieldAlert,
   Edit2,
   Check,
+  LogOut,
+  LogIn,
+  Mail,
+  ShieldCheck,
 } from 'lucide-react';
 import { soundManager } from '../services/soundManager';
-import { AppLanguage, AppTheme, QuizResult, SavedItem } from '../types';
+import { AppLanguage, AppTheme, QuizResult, SavedItem, User } from '../types';
 import { translations } from '../services/i18n';
 
 interface ProfileViewProps {
@@ -32,6 +36,9 @@ interface ProfileViewProps {
   quizHistory: QuizResult[];
   streakDays: number;
   onResetAllData: () => void;
+  currentUser?: User | null;
+  onLogout?: () => void;
+  onOpenAuth?: () => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
@@ -45,13 +52,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   quizHistory,
   streakDays,
   onResetAllData,
+  currentUser,
+  onLogout,
+  onOpenAuth,
 }) => {
   const t = translations[language];
 
   // Editable student profile info
-  const [name, setName] = useState('Faizan Ali');
-  const [course, setCourse] = useState('B.Tech - Computer Science & Engineering');
-  const [college, setCollege] = useState('Institute of Technology');
+  const [name, setName] = useState(currentUser?.name || 'Faizan Alam');
+  const [course, setCourse] = useState(currentUser?.course || 'Bachelor of Computer Applications (BCA)');
+  const [college, setCollege] = useState(currentUser?.college || 'Gujarat Technological University (GTU)');
   const [isEditing, setIsEditing] = useState(false);
 
   // Compute stats
@@ -71,10 +81,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   return (
     <div id="profile-view" className="space-y-5 sm:space-y-6 max-w-4xl mx-auto pb-20 md:pb-8 w-full min-w-0">
       {/* Header */}
-      <div className="border-b border-black/10 dark:border-white/10 pb-3 sm:pb-4">
+      <div className="border-b border-black/10 dark:border-white/10 pb-3 sm:pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-[#004741] text-[#F0EDE4] shrink-0">
-            <User className="w-5 h-5" />
+            <UserIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-lg sm:text-2xl font-display font-black text-black dark:text-[#F0EDE4] tracking-tight leading-tight">
@@ -85,6 +95,33 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </p>
           </div>
         </div>
+
+        {currentUser && onLogout ? (
+          <button
+            onClick={() => {
+              soundManager.play('button_click');
+              onLogout();
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/5 hover:bg-red-500/10 text-xs font-bold transition-all active:scale-95"
+            title="Log Out of StudyMate"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>{language === 'hi' ? 'लॉग आउट' : 'Log Out'}</span>
+          </button>
+        ) : (
+          onOpenAuth && (
+            <button
+              onClick={() => {
+                soundManager.play('button_click');
+                onOpenAuth();
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#004741] text-[#F0EDE4] text-xs font-bold shadow-sm hover:bg-[#003833] transition-all active:scale-95"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>{language === 'hi' ? 'साइन इन करें' : 'Sign In'}</span>
+            </button>
+          )
+        )}
       </div>
 
       {/* Student Identity Card */}
@@ -92,7 +129,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[#004741] text-[#F0EDE4] font-black text-base sm:text-xl flex items-center justify-center shadow-md shrink-0">
-              {name
+              {(currentUser?.name || name)
                 .split(' ')
                 .map((n) => n[0])
                 .join('')
@@ -100,17 +137,32 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div className="space-y-0.5 sm:space-y-1 min-w-0">
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="py-1 px-2 text-sm sm:text-base font-bold rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-black/50 w-full"
-                />
-              ) : (
-                <h2 className="text-base sm:text-xl font-bold text-black dark:text-[#F0EDE4] truncate">
-                  {name}
-                </h2>
+              <div className="flex items-center gap-2">
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="py-1 px-2 text-sm sm:text-base font-bold rounded-lg border border-black/20 dark:border-white/20 bg-white dark:bg-black/50 w-full"
+                  />
+                ) : (
+                  <h2 className="text-base sm:text-xl font-bold text-black dark:text-[#F0EDE4] truncate">
+                    {currentUser?.name || name}
+                  </h2>
+                )}
+
+                {currentUser && (
+                  <span className="px-2 py-0.5 rounded-full bg-[#004741]/10 text-[#004741] dark:text-[#6ee7b7] text-[10px] font-bold shrink-0">
+                    Sem {currentUser.semester || 4}
+                  </span>
+                )}
+              </div>
+
+              {currentUser?.email && (
+                <p className="text-[11px] text-black/60 dark:text-[#F0EDE4]/60 flex items-center gap-1">
+                  <Mail className="w-3 h-3 text-[#004741] dark:text-[#6ee7b7]" />
+                  <span>{currentUser.email}</span>
+                </p>
               )}
 
               {isEditing ? (
@@ -142,7 +194,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
 
-          <div className="self-end sm:self-auto shrink-0">
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
             {isEditing ? (
               <button
                 onClick={handleSaveProfile}
@@ -161,6 +213,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               >
                 <Edit2 className="w-3 h-3" />
                 <span>Edit Info</span>
+              </button>
+            )}
+
+            {currentUser && onLogout && (
+              <button
+                onClick={() => {
+                  soundManager.play('button_click');
+                  onLogout();
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-black/15 dark:border-white/15 text-black dark:text-[#F0EDE4] text-xs font-bold hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30 transition-all"
+              >
+                <LogOut className="w-3 h-3 text-red-500" />
+                <span>Logout</span>
               </button>
             )}
           </div>

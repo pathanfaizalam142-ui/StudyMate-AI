@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Home,
   GraduationCap,
+  FileText,
   MessageSquare,
   FileCheck2,
   Award,
@@ -35,7 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems = [
     { id: 'home' as NavigationTab, label: t.navHome, icon: Home },
-    { id: 'gtu_bca' as NavigationTab, label: t.navGtuBca, icon: GraduationCap, badge: 'GTU' },
+    { id: 'gtu_bca' as NavigationTab, label: t.navGtuBca, icon: GraduationCap, badge: 'Syllabus' },
+    { id: 'question_papers' as NavigationTab, label: t.navQuestionPapers || 'Question Papers', icon: FileText, badge: '2026' },
     { id: 'ask_ai' as NavigationTab, label: t.navAskAI, icon: MessageSquare, badge: 'AI' },
     { id: 'exam_mode' as NavigationTab, label: t.navExamMode, icon: FileCheck2, badge: 'Hot' },
     { id: 'quiz' as NavigationTab, label: t.navQuiz, icon: Award, count: quizCount },

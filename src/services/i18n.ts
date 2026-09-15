@@ -25,6 +25,7 @@ export const translations = {
     // Bottom Nav / Sidebar
     navHome: 'Home',
     navGtuBca: 'GTU BCA',
+    navQuestionPapers: 'Question Papers',
     navAskAI: 'Ask AI',
     navExamMode: 'Exam Answer',
     navQuiz: 'Quiz',
@@ -32,6 +33,7 @@ export const translations = {
     navProfile: 'Profile',
     navNotes: 'Upload Notes',
     navPlan: 'Study Plan',
+    navAuth: 'Sign In / Account',
 
     // Ask AI
     askHeader: 'AI Study Assistant',
@@ -144,6 +146,7 @@ export const translations = {
     // Bottom Nav / Sidebar
     navHome: 'होम',
     navGtuBca: 'GTU BCA',
+    navQuestionPapers: 'GTU प्रश्न पत्र',
     navAskAI: 'AI से पूछें',
     navExamMode: 'परीक्षा उत्तर',
     navQuiz: 'क्विज',
@@ -151,6 +154,7 @@ export const translations = {
     navProfile: 'प्रोफाइल',
     navNotes: 'नोट्स अपलोड',
     navPlan: 'स्टडी प्लान',
+    navAuth: 'साइन इन / खाता',
 
     // Ask AI
     askHeader: 'AI अध्ययन सहायक',

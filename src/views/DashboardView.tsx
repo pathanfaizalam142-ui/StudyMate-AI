@@ -134,6 +134,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       target: 'gtu_bca' as NavigationTab,
     },
     {
+      id: 'question_papers',
+      title: language === 'hi' ? 'GTU प्रश्न पत्र' : 'GTU Papers (2025-26)',
+      desc: language === 'hi' ? 'सेम 1-6 PDF डाउनलोड करें' : 'Sem 1-6 authentic PDFs',
+      icon: FileText,
+      color: 'bg-[#004741] text-[#F0EDE4]',
+      target: 'question_papers' as NavigationTab,
+    },
+    {
       id: 'ask_ai',
       title: t.actionAskAI,
       desc: language === 'hi' ? 'कोई भी शंका पूछें' : 'Instant Q&A and concepts',
@@ -336,6 +344,54 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* GTU Question Papers Dedicated Card */}
+      <div
+        id="dashboard-gtu-papers-card"
+        onClick={() => {
+          soundManager.play('card_open');
+          onNavigate('question_papers');
+        }}
+        className="cursor-pointer relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#004741] to-[#002f2b] p-4 sm:p-6 text-[#F0EDE4] shadow-md hover:shadow-lg transition-all group border border-[#004741]/40"
+      >
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-md bg-white/15 text-white text-[10px] font-mono font-bold uppercase tracking-wider">
+                Official GTU Archive
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                2025 & 2026 Papers
+              </span>
+            </div>
+            <h3 className="text-base sm:text-xl font-bold tracking-tight text-white group-hover:text-[#6ee7b7] transition-colors">
+              {language === 'hi'
+                ? 'GTU BCA पिछले वर्ष के प्रश्न पत्र (Sem 1-6)'
+                : 'GTU BCA Previous Year Question Papers (Sem 1-6)'}
+            </h3>
+            <p className="text-xs sm:text-sm text-[#F0EDE4]/80 leading-relaxed">
+              {language === 'hi'
+                ? 'सेमेस्टर और विषयवार 2025 व 2026 के प्रामाणिक विश्वविद्यालय प्रश्न पत्र ब्राउज़ करें, PDF डाउनलोड करें या सीधे AI से हल करवाएं।'
+                : 'Browse semester and subject-wise 2025 & 2026 authentic university examination papers, download genuine PDFs, or solve with AI.'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            <button
+              type="button"
+              className="px-4 py-2.5 rounded-xl bg-[#F0EDE4] hover:bg-white text-[#004741] text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+            >
+              <span>{language === 'hi' ? 'सभी पेपर देखें' : 'Browse Papers'}</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* Decorative background watermark */}
+        <div className="absolute -right-6 -bottom-6 opacity-10 pointer-events-none group-hover:scale-110 transition-transform">
+          <FileText className="w-36 h-36 text-white" />
         </div>
       </div>
 

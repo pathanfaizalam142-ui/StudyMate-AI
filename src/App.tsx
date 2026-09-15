@@ -11,9 +11,12 @@ import { StudyPlanView } from './views/StudyPlanView';
 import { SavedAnswersView } from './views/SavedAnswersView';
 import { ProfileView } from './views/ProfileView';
 import { GTUBcaView } from './views/GTUBcaView';
+import { QuestionPapersView } from './views/QuestionPapersView';
+import { AuthView } from './views/AuthView';
 import { AddSubjectModal } from './components/AddSubjectModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { soundManager } from './services/soundManager';
+import { authService } from './services/authService';
 import { getAllGTUSubjectsFlat } from './data/gtuBcaCurriculum';
 import {
   NavigationTab,
@@ -24,13 +27,29 @@ import {
   QuizResult,
   UploadedNote,
   StudyPlanData,
+  User,
 } from './types';
 
 export default function App() {
-  // Navigation State
-  const [activeTab, setActiveTab] = useState<NavigationTab>('home');
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
+
+  // Navigation State: When unauthenticated, route starts at 'auth'. When logged in, route starts at 'home'.
+  const [activeTab, setActiveTab] = useState<NavigationTab>(() =>
+    authService.getCurrentUser() ? 'home' : 'auth'
+  );
   const [navQuery, setNavQuery] = useState<string | undefined>(undefined);
   const [navSubject, setNavSubject] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const unsubscribe = authService.subscribe((user) => {
+      setCurrentUser(user);
+      if (!user) {
+        setActiveTab('auth');
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   // Language state (en | hi)
   const [language, setLanguage] = useState<AppLanguage>(() => {
@@ -312,8 +331,46 @@ export default function App() {
     window.location.reload();
   };
 
+  const handleLogout = async () => {
+    await authService.logout();
+    setCurrentUser(null);
+    soundManager.play('button_click');
+    setActiveTab('auth');
+  };
+
+  const handleAuthSuccess = (user: User) => {
+    setCurrentUser(user);
+    soundManager.play('save');
+    setActiveTab('home');
+  };
+
+  const handleOpenAuth = () => {
+    setActiveTab('auth');
+  };
+
   const completedTasksCount = studyPlan.todayTasks.filter((t) => t.completed).length;
   const totalTasksCount = studyPlan.todayTasks.length;
+
+  // VISIBLE LOGIN ENTRY SCREEN:
+  // When no authenticated session exists, show the Login screen directly as the initial application screen.
+  if (!currentUser) {
+    return (
+      <div
+        id="studymate-auth-app"
+        className="min-h-screen bg-[#F0EDE4] dark:bg-[#050807] text-black dark:text-[#F0EDE4] selection:bg-[#004741] selection:text-[#F0EDE4]"
+      >
+        <AuthView
+          language={language}
+          onLanguageToggle={handleLanguageToggle}
+          theme={theme}
+          onThemeToggle={handleThemeToggle}
+          soundEnabled={soundEnabled}
+          onSoundToggle={handleSoundToggle}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -331,7 +388,9 @@ export default function App() {
         streakDays={streakDays}
         onNotificationClick={() => setIsNotificationsOpen(true)}
         onProfileClick={() => setActiveTab('profile')}
+        onOpenAuth={handleOpenAuth}
         activeTab={activeTab}
+        currentUser={currentUser}
       />
 
       {/* Main Content Area: Sidebar on Desktop + Dynamic View */}
@@ -434,6 +493,28 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'question_papers' && (
+            <QuestionPapersView
+              language={language}
+              theme={theme}
+              onNavigateToAskAI={(query, subject) => handleNavigate('ask_ai', query, subject)}
+              onNavigateToCurriculum={() => handleNavigate('gtu_bca')}
+            />
+          )}
+
+          {activeTab === 'auth' && (
+            <AuthView
+              language={language}
+              onLanguageToggle={handleLanguageToggle}
+              theme={theme}
+              onThemeToggle={handleThemeToggle}
+              soundEnabled={soundEnabled}
+              onSoundToggle={handleSoundToggle}
+              onAuthSuccess={handleAuthSuccess}
+              onCancel={() => setActiveTab('home')}
+            />
+          )}
+
           {activeTab === 'profile' && (
             <ProfileView
               language={language}
@@ -446,6 +527,9 @@ export default function App() {
               quizHistory={quizHistory}
               streakDays={streakDays}
               onResetAllData={handleResetAllData}
+              currentUser={currentUser}
+              onLogout={handleLogout}
+              onOpenAuth={() => setActiveTab('auth')}
             />
           )}
         </main>
