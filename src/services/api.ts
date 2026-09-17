@@ -86,7 +86,10 @@ export const api = {
   },
 
   async generateQuiz(params: {
-    subject?: string;
+    subject: string;
+    subjectCode?: string;
+    semester?: number;
+    unit?: string;
     topic?: string;
     questionCount?: number;
     difficulty?: string;

@@ -1,0 +1,1773 @@
+[
+  {
+    "semester": 1,
+    "code": "BCA101",
+    "name": "Fundamental of Computer Organization",
+    "shortName": "FCO",
+    "description": "Von Neumann architecture, logic gates, memory hierarchy, CPU instruction cycles, and I/O interfacing.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Introduction to Digital Computers & Number Systems",
+        "topics": [
+          {
+            "id": "fco-u1-t1",
+            "title": "Block Diagram of Digital Computer",
+            "summary": "Von Neumann architecture components: ALU, Control Unit, Memory Unit, Input and Output devices with system bus connections."
+          },
+          {
+            "id": "fco-u1-t2",
+            "title": "Number Systems & Base Conversions",
+            "summary": "Binary, Octal, Decimal, and Hexadecimal representations; 1s and 2s complement arithmetic; BCD and Gray codes."
+          },
+          {
+            "id": "fco-u1-t3",
+            "title": "Logic Gates & Boolean Algebra Laws",
+            "summary": "Basic gates (AND, OR, NOT), Universal gates (NAND, NOR), De Morgan’s Theorems, and truth tables."
+          }
+        ],
+        "examQuestions": [
+          "Draw and explain the block diagram of a digital computer with the functional role of each subsystem.",
+          "What is the Von Neumann stored-program concept? State its key limitations.",
+          "Define CPU, ALU, and Control Unit.",
+          "Convert (110101.11)2 to Decimal and Hexadecimal. Perform (28)10 - (15)10 using 2s complement.",
+          "Differentiate between 1s complement and 2s complement representation with examples.",
+          "Convert (472.625)10 to Octal and Binary.",
+          "Why are NAND and NOR gates called Universal Gates? Realize AND, OR, and NOT gates using only NOR gates.",
+          "Draw symbol and truth table of XOR and XNOR gates."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Combinational & Sequential Circuits",
+        "topics": [
+          {
+            "id": "fco-u2-t1",
+            "title": "Adders: Half Adder and Full Adder",
+            "summary": "Circuit design, Boolean truth tables, sum and carry expressions, logic diagram implementation."
+          },
+          {
+            "id": "fco-u2-t2",
+            "title": "Multiplexers, Demultiplexers & Encoders",
+            "summary": "4:1 and 8:1 MUX operation, line decoders, priority encoders, data routing."
+          },
+          {
+            "id": "fco-u2-t3",
+            "title": "Flip-Flops: RS, JK, D, and T Flip-Flops",
+            "summary": "Clocked latches, race-around condition, Master-Slave JK flip-flop, state tables and excitation diagrams."
+          }
+        ],
+        "examQuestions": [
+          "Design a Full Adder circuit. Derive its truth table, Boolean expressions for Sum and Carry, and draw the logic circuit.",
+          "Explain Half Adder with truth table and K-map simplification.",
+          "Explain 8-to-1 Multiplexer with functional block diagram, truth table, and logic gate implementation.",
+          "Differentiate between Multiplexer and Demultiplexer with neat diagrams.",
+          "Explain Master-Slave JK Flip-Flop. How does it eliminate the race-around condition?",
+          "Explain the working of RS and D Flip-Flops with circuit diagram and characteristic table."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Memory Organization & Hierarchy",
+        "topics": [
+          {
+            "id": "fco-u3-t1",
+            "title": "Memory Hierarchy and Cache Memory",
+            "summary": "Levels of memory (Registers, L1/L2/L3 Cache, RAM, Secondary Storage), Cache hit ratio, mapping techniques."
+          },
+          {
+            "id": "fco-u3-t2",
+            "title": "Primary vs Secondary Memory & RAM/ROM",
+            "summary": "SRAM vs DRAM, Mask ROM, PROM, EPROM, EEPROM, Flash memory, Magnetic disks and SSDs."
+          }
+        ],
+        "examQuestions": [
+          "Explain the Memory Hierarchy in modern computer systems with respect to access time, cost, and capacity.",
+          "What is Cache Memory? Explain Direct Mapping, Associative Mapping, and Set-Associative Mapping.",
+          "Define Cache Hit, Cache Miss, and Hit Ratio.",
+          "Compare Static RAM (SRAM) and Dynamic RAM (DRAM) with structural comparison table.",
+          "Explain different types of ROM (PROM, EPROM, EEPROM) with applications."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "CPU Architecture & Instruction Cycle",
+        "topics": [
+          {
+            "id": "fco-u4-t1",
+            "title": "Instruction Cycle & Addressing Modes",
+            "summary": "Fetch, Decode, Execute, Interrupt phases; Program Counter (PC), Instruction Register (IR), Accumulator; Immediate, Direct, Indirect addressing."
+          },
+          {
+            "id": "fco-u4-t2",
+            "title": "Input-Output Organization & DMA",
+            "summary": "Programmed I/O, Interrupt-driven I/O, Direct Memory Access (DMA) controller and bus arbitration."
+          }
+        ],
+        "examQuestions": [
+          "Explain the basic computer instruction cycle (Fetch, Decode, Read Effective Address, Execute) with flowchart.",
+          "Explain various CPU Addressing Modes (Immediate, Direct, Indirect, Register Indirect, Indexed) with examples.",
+          "Explain Direct Memory Access (DMA) transfer mechanism with neat block diagram of DMA controller.",
+          "Compare Programmed I/O, Interrupt-Driven I/O, and DMA."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 1,
+    "code": "BCA102",
+    "name": "Fundamental of Programming",
+    "shortName": "FOP (C Programming)",
+    "description": "Structured programming logic, control flow, functions, arrays, pointers, structures, and file operations in C.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Introduction to Programming & C Basics",
+        "topics": [
+          {
+            "id": "fop-u1-t1",
+            "title": "Algorithms, Flowcharts & Structure of C Program",
+            "summary": "Problem solving concepts, pseudo-code, compilation process (Preprocessor, Compiler, Assembler, Linker)."
+          },
+          {
+            "id": "fop-u1-t2",
+            "title": "Data Types, Operators & Expressions",
+            "summary": "Primitive data types (int, float, char, double), arithmetic, relational, logical, bitwise operators, type casting."
+          }
+        ],
+        "examQuestions": [
+          "Explain the structure of a C program with example. Discuss the role of preprocessor directives.",
+          "Draw flowchart and write algorithm to find the largest of three numbers.",
+          "Explain operator precedence and associativity in C with appropriate expressions.",
+          "Explain bitwise operators in C (&, |, ^, ~, <<, >>) with examples."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Control Structures & Loops",
+        "topics": [
+          {
+            "id": "fop-u2-t1",
+            "title": "Decision Making (if-else, switch-case)",
+            "summary": "Simple if, if-else, nested if-else, else-if ladder, switch statement with break and default."
+          },
+          {
+            "id": "fop-u2-t2",
+            "title": "Looping Statements (while, do-while, for)",
+            "summary": "Entry-controlled vs exit-controlled loops, break, continue, goto statements, nested loops."
+          }
+        ],
+        "examQuestions": [
+          "Explain switch-case statement with syntax, rules, flowchart, and a menu-driven arithmetic calculator program.",
+          "Compare if-else ladder vs switch-case statement.",
+          "Differentiate between while and do-while loop with syntax, flowcharts, and C programs.",
+          "Write a C program to check whether a given integer is a Prime Number or Armstrong Number."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Arrays, Strings & Functions",
+        "topics": [
+          {
+            "id": "fop-u3-t1",
+            "title": "1D & 2D Arrays and String Manipulations",
+            "summary": "Array declaration, initialization, 2D matrix addition and multiplication, string library functions (strlen, strcpy, strcmp, strcat)."
+          },
+          {
+            "id": "fop-u3-t2",
+            "title": "User-Defined Functions & Recursion",
+            "summary": "Function definition, declaration, call-by-value vs call-by-reference, recursion, base condition."
+          }
+        ],
+        "examQuestions": [
+          "Write a C program to multiply two 3x3 matrices and print the resultant matrix.",
+          "Explain string handling functions in string.h with syntax and example code.",
+          "What is Recursion? Write a recursive function in C to find the factorial of a number and Fibonacci sequence.",
+          "Differentiate between Call by Value and Call by Reference with working C code."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "Pointers, Structures & File Management",
+        "topics": [
+          {
+            "id": "fop-u4-t1",
+            "title": "Pointers & Dynamic Memory Allocation",
+            "summary": "Pointer declaration, dereferencing, pointer arithmetic, malloc(), calloc(), realloc(), free()."
+          },
+          {
+            "id": "fop-u4-t2",
+            "title": "Structures, Unions & File I/O in C",
+            "summary": "struct vs union, array of structures, fopen(), fclose(), fprintf(), fscanf(), fread(), fwrite()."
+          }
+        ],
+        "examQuestions": [
+          "What is a Pointer? Explain Dynamic Memory Allocation functions (malloc, calloc, realloc, free) with examples.",
+          "Write a C program to swap two numbers using pointers.",
+          "Differentiate between Structure and Union in C with memory allocation diagrams and examples.",
+          "Write a C program to read student data from a text file and write filtered records to another file."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 1,
+    "code": "BCA103",
+    "name": "Fundamentals of Web Technology",
+    "shortName": "FWT (HTML, CSS, JS)",
+    "description": "Semantic HTML5, responsive CSS3 styling, client-side scripting with JavaScript, DOM manipulation.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Internet & HTML5 Fundamentals",
+        "topics": [
+          {
+            "id": "fwt-u1-t1",
+            "title": "HTML5 Document Structure & Semantic Elements",
+            "summary": "DOCTYPE, html, head, body tags, semantic tags (header, nav, article, section, footer, aside)."
+          },
+          {
+            "id": "fwt-u1-t2",
+            "title": "HTML Forms & Form Validation Controls",
+            "summary": "Input types (text, email, password, radio, checkbox, date), select dropdown, textarea, pattern attribute."
+          }
+        ],
+        "examQuestions": [
+          "Explain HTML5 semantic elements and their advantages over traditional div tags.",
+          "Explain tables, lists (ordered, unordered, definition) and hyperlinks in HTML.",
+          "Design a student registration form in HTML5 utilizing diverse input elements and validation attributes."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "CSS3 Styles, Box Model & Layouts",
+        "topics": [
+          {
+            "id": "fwt-u2-t1",
+            "title": "CSS Selectors & CSS Box Model",
+            "summary": "Inline, Internal, External CSS; Class, ID, Pseudo-classes; Margin, Border, Padding, Content box model."
+          },
+          {
+            "id": "fwt-u2-t2",
+            "title": "Responsive Web Design & Flexbox",
+            "summary": "Viewport meta tag, Media Queries, Flexbox container and item properties (justify-content, align-items)."
+          }
+        ],
+        "examQuestions": [
+          "Explain the CSS Box Model with neat labeled schematic diagram and property details.",
+          "Explain different types of CSS Selectors with syntax and examples.",
+          "Explain CSS Flexbox layout model with key properties for parent and child elements.",
+          "Write CSS media queries to make a webpage responsive across mobile, tablet, and desktop."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Client-Side JavaScript Basics",
+        "topics": [
+          {
+            "id": "fwt-u3-t1",
+            "title": "JavaScript Variables, Functions & Events",
+            "summary": "var, let, const scopes; arrow functions; click, submit, change, mouseover event handlers."
+          }
+        ],
+        "examQuestions": [
+          "Differentiate between var, let, and const in JavaScript with scope examples.",
+          "Write a JavaScript program to validate a user registration form (Email and Password length)."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "DOM Manipulation & Dynamic Interactions",
+        "topics": [
+          {
+            "id": "fwt-u4-t1",
+            "title": "Document Object Model (DOM) Tree & Manipulation",
+            "summary": "getElementById, querySelector, createElement, appendChild, innerHTML, classList manipulation."
+          }
+        ],
+        "examQuestions": [
+          "What is DOM? Explain DOM tree traversal and element manipulation methods in JavaScript with examples."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 1,
+    "code": "BCA104",
+    "name": "Fundamentals of Statistical Methods",
+    "shortName": "Statistics-1",
+    "description": "Measures of central tendency, dispersion, probability theory, binomial and normal distributions.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Data Representation & Central Tendency",
+        "topics": [
+          {
+            "id": "fsm-u1-t1",
+            "title": "Mean, Median & Mode for Grouped/Ungrouped Data",
+            "summary": "Arithmetic mean, weighted mean, median calculation using ogives, empirical relation between mean, median, mode."
+          }
+        ],
+        "examQuestions": [
+          "Define Mean, Median, and Mode. State the empirical formula relating them for a moderately skewed distribution.",
+          "Calculate Arithmetic Mean and Median for given continuous frequency distribution data."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Measures of Dispersion",
+        "topics": [
+          {
+            "id": "fsm-u2-t1",
+            "title": "Standard Deviation, Variance & Coefficient of Variation",
+            "summary": "Range, Mean Deviation, Variance formula, Standard deviation, Karl Pearson’s coefficient of variation (C.V.)."
+          }
+        ],
+        "examQuestions": [
+          "Calculate Standard Deviation and Coefficient of Variation for given grouped frequency data.",
+          "Why is Standard Deviation regarded as the best measure of dispersion? Compare it with Mean Deviation."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Probability Theory & Conditional Probability",
+        "topics": [
+          {
+            "id": "fsm-u3-t1",
+            "title": "Addition & Multiplication Theorems, Bayes Theorem",
+            "summary": "Sample space, mutually exclusive events, independent events, conditional probability P(A|B), Bayes Theorem derivation."
+          }
+        ],
+        "examQuestions": [
+          "State and prove Bayes Theorem of probability. Solve a standard diagnostic testing numerical problem.",
+          "Explain Addition Theorem of Probability for two intersecting events."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "Probability Distributions",
+        "topics": [
+          {
+            "id": "fsm-u4-t1",
+            "title": "Binomial, Poisson & Normal Distribution",
+            "summary": "Probability mass functions, mean and variance of Binomial distribution (np, npq), properties of standard normal curve."
+          }
+        ],
+        "examQuestions": [
+          "State the conditions and properties of Binomial Distribution. Prove that its Mean = np and Variance = npq.",
+          "Explain the properties of Normal Distribution curve with sketch."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 1,
+    "code": "BCA105",
+    "name": "Mathematics-1",
+    "shortName": "Maths-1",
+    "description": "Set theory, relations, matrices and determinants, differential calculus, limits and continuity.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Set Theory & Relations",
+        "topics": [
+          {
+            "id": "m1-u1-t1",
+            "title": "Sets, Venn Diagrams & Cartesian Products",
+            "summary": "Types of sets, Venn diagrams, union, intersection, complement, equivalence relations."
+          }
+        ],
+        "examQuestions": [
+          "Define Reflexive, Symmetric, and Transitive relations. What is an Equivalence Relation?"
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Matrices & Determinants",
+        "topics": [
+          {
+            "id": "m1-u2-t1",
+            "title": "Matrix Operations, Inverse & Cramer’s Rule",
+            "summary": "Matrix multiplication, transpose, adjoint, matrix inversion A^-1 = adj(A)/|A|, system of linear equations solving."
+          }
+        ],
+        "examQuestions": [
+          "Find the inverse of a 3x3 matrix using the Adjoint method."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Limits & Continuity",
+        "topics": [
+          {
+            "id": "m1-u3-t1",
+            "title": "Limits of Algebraic and Trigonometric Functions",
+            "summary": "Left-hand limit, right-hand limit, standard limit formulas, continuity at a point."
+          }
+        ],
+        "examQuestions": [
+          "Evaluate lim(x->0) (sin x / x) and lim(x->a) (x^n - a^n)/(x - a).",
+          "Discuss the continuity of f(x) = (x^2 - 4)/(x - 2) at x = 2."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "Differential Calculus",
+        "topics": [
+          {
+            "id": "m1-u4-t1",
+            "title": "Derivatives, Product/Quotient Rules, Chain Rule",
+            "summary": "First principles, product rule d(uv)/dx, quotient rule, chain rule, maxima and minima."
+          }
+        ],
+        "examQuestions": [
+          "Find dy/dx using chain rule for composite trigonometric and logarithmic functions.",
+          "Explain conditions for Maxima and Minima of a single variable function with an optimization problem."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 1,
+    "code": "BCA106",
+    "name": "Office Automation",
+    "shortName": "Office Automation",
+    "description": "Word processing, spreadsheet analysis, formula automation, presentation design, and cloud office tools.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Advanced Word Processing & Formatting",
+        "topics": [
+          {
+            "id": "oa-u1-t1",
+            "title": "Mail Merge, Styles, Table of Contents & References",
+            "summary": "Mail merge wizard, data sources, citations, automated index generation, formatting templates."
+          }
+        ],
+        "examQuestions": [
+          "Explain the step-by-step process of performing Mail Merge in MS Word with diagrams."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Spreadsheets: Formulas, Charts & VLOOKUP",
+        "topics": [
+          {
+            "id": "oa-u2-t1",
+            "title": "Formulas, VLOOKUP, HLOOKUP & Pivot Tables",
+            "summary": "SUM, AVERAGE, IF, COUNTIF, nested formulas, VLOOKUP/XLOOKUP lookup functions, Pivot tables for data analysis."
+          }
+        ],
+        "examQuestions": [
+          "Explain VLOOKUP and HLOOKUP functions in Excel with syntax and practical examples.",
+          "What is a Pivot Table in Excel? Explain how to summarize large sales data using Pivot Table."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Presentation Tools & Automation",
+        "topics": [
+          {
+            "id": "oa-u3-t1",
+            "title": "Slide Master, Animation Schemes & Macros",
+            "summary": "Slide transitions, custom animations, Slide Master templating, basic macro recording."
+          }
+        ],
+        "examQuestions": [
+          "What is Slide Master in MS PowerPoint? Explain its advantages in consistent design."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 1,
+    "code": "BCA107",
+    "name": "Communication Skills",
+    "shortName": "Comm Skills",
+    "description": "Grammar mechanics, business correspondence, presentation skills, group discussions, and listening skills.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Basics of Business Communication",
+        "topics": [
+          {
+            "id": "cs-u1-t1",
+            "title": "Communication Cycle, Types & Barriers",
+            "summary": "Sender, encoding, channel, decoding, receiver, feedback; verbal vs non-verbal; physical, psychological, semantic barriers."
+          }
+        ],
+        "examQuestions": [
+          "Explain the 7 Cs of effective business communication with examples.",
+          "Discuss various barriers to communication and methods to overcome them."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Written Business Correspondence",
+        "topics": [
+          {
+            "id": "cs-u2-t1",
+            "title": "Formal Email Writing, Resume & Letters",
+            "summary": "Professional email etiquette, job application cover letter, chronological and functional resume formats."
+          }
+        ],
+        "examQuestions": [
+          "Draft a professional resume and cover letter applying for a Junior Web Developer position."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 1,
+    "code": "BCA108",
+    "name": "Indian Knowledge System",
+    "shortName": "IKS",
+    "description": "Vedic mathematics, historical contributions of Indian scholars in astronomy, architecture, metallurgy, and philosophy.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Introduction to IKS & Vedic Mathematics",
+        "topics": [
+          {
+            "id": "iks-u1-t1",
+            "title": "Vedic Math Sutras & Mathematical Heritage",
+            "summary": "Contributions of Aryabhata, Brahmagupta, Bhaskara II, Nilakantha Somayaji; Ekadhikena Purvena, Nikhilam sutras."
+          }
+        ],
+        "examQuestions": [
+          "Discuss the historical contribution of Aryabhata in astronomy, trigonometry, and place-value number system.",
+          "Explain two Vedic Mathematics sutras for rapid mental calculation with step-by-step examples."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Science, Technology & Philosophy in Ancient India",
+        "topics": [
+          {
+            "id": "iks-u2-t1",
+            "title": "Ancient Metallurgy, Ayurveda & Architecture",
+            "summary": "Delhi Iron Pillar metallurgy, Sushruta Samhita surgical tools, Vastu Shastra town planning and sustainability."
+          }
+        ],
+        "examQuestions": [
+          "Write a comprehensive note on ancient Indian achievements in metallurgy and water harvesting systems."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA201",
+    "name": "Data Structure",
+    "shortName": "DS (Data Structures)",
+    "description": "Linear and non-linear data structures: Arrays, Stacks, Queues, Linked Lists, Trees, Graphs, Sorting & Searching algorithms.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Introduction to Data Structures & Stacks",
+        "topics": [
+          {
+            "id": "ds-u1-t1",
+            "title": "Stack Operations, Infix to Postfix & Applications",
+            "summary": "LIFO principle, PUSH and POP algorithms, stack overflow/underflow, expression evaluation, recursion."
+          }
+        ],
+        "examQuestions": [
+          "Define Stack. Write complete algorithms for PUSH and POP operations with overflow/underflow checks.",
+          "Convert the following infix expression into postfix using Stack: A + (B * C - (D / E ^ F) * G) * H.",
+          "Explain how Stack is used in evaluation of postfix expressions with an example."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Queues: Linear, Circular, Priority & Deque",
+        "topics": [
+          {
+            "id": "ds-u2-t1",
+            "title": "Circular Queue & Priority Queue Operations",
+            "summary": "FIFO principle, Enqueue and Dequeue, circular increment using modulo arithmetic, front/rear pointers."
+          }
+        ],
+        "examQuestions": [
+          "Explain Circular Queue. Why is it preferred over a Simple Linear Queue? Write algorithms for INSERT and DELETE.",
+          "Explain Priority Queue and Double-Ended Queue (Deque) with applications."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Linked Lists (Singly, Doubly, Circular)",
+        "topics": [
+          {
+            "id": "ds-u3-t1",
+            "title": "Singly Linked List: Insertion, Deletion & Traversal",
+            "summary": "Dynamic memory node structure, insert at start/middle/end, delete node, reverse linked list."
+          }
+        ],
+        "examQuestions": [
+          "Write C functions to insert a node at the beginning, at the end, and after a specified node in Singly Linked List.",
+          "Differentiate between Singly Linked List and Doubly Linked List with memory representation diagrams."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "Trees, Graphs, Sorting & Searching",
+        "topics": [
+          {
+            "id": "ds-u4-t1",
+            "title": "Binary Search Tree (BST) & Tree Traversals",
+            "summary": "Binary tree definition, BST property, Inorder, Preorder, Postorder traversal algorithms, height and depth."
+          }
+        ],
+        "examQuestions": [
+          "Explain Binary Search Tree (BST). Insert elements: 45, 23, 78, 12, 34, 67, 89 and show Inorder, Preorder, Postorder traversals.",
+          "Compare Bubble Sort, Quick Sort, and Merge Sort with time and space complexity comparison table.",
+          "Explain Binary Search algorithm with code and time complexity analysis."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA202",
+    "name": "Database Management System",
+    "shortName": "DBMS (SQL & ER)",
+    "description": "Relational data models, ER diagrams, Normalization (1NF to BCNF), SQL queries, Transaction management, ACID properties.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "DBMS Concepts & Architecture",
+        "topics": [
+          {
+            "id": "dbms-u1-t1",
+            "title": "3-Tier Database Architecture & Data Independence",
+            "summary": "Physical, Logical, and View levels; Physical and Logical data independence; File system vs DBMS."
+          }
+        ],
+        "examQuestions": [
+          "Explain the 3-Tier ANSI/SPARC Database Architecture with a neat diagram. Discuss physical and logical data independence.",
+          "Differentiate between Traditional File System and Database Management System (DBMS)."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Entity-Relationship (ER) Modeling",
+        "topics": [
+          {
+            "id": "dbms-u2-t1",
+            "title": "ER Diagrams, Keys & Cardinality Constraints",
+            "summary": "Entities, weak entities, attributes, primary, foreign, candidate, super keys; 1:1, 1:N, M:N relationships."
+          }
+        ],
+        "examQuestions": [
+          "Design an ER Diagram for a University Examination Management System showing all entities, attributes, primary keys, and relationships.",
+          "Explain Super Key, Candidate Key, Primary Key, and Foreign Key with an example table."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Relational Model, Normalization & Functional Dependencies",
+        "topics": [
+          {
+            "id": "dbms-u3-t1",
+            "title": "Normalization: 1NF, 2NF, 3NF, and BCNF",
+            "summary": "Anomalies (Insertion, Deletion, Update); Functional dependencies; Normal form definitions and decomposition rules."
+          }
+        ],
+        "examQuestions": [
+          "What is Normalization? Explain 1NF, 2NF, 3NF, and BCNF with suitable relational examples and dependency diagrams.",
+          "Explain Partial Functional Dependency and Transitive Functional Dependency with examples."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "Structured Query Language (SQL) & Transactions",
+        "topics": [
+          {
+            "id": "dbms-u4-t1",
+            "title": "SQL DDL, DML, Joins & ACID Properties",
+            "summary": "CREATE, ALTER, DROP; SELECT, INSERT, UPDATE, DELETE; INNER, LEFT, RIGHT OUTER JOIN; Atomicity, Consistency, Isolation, Durability."
+          }
+        ],
+        "examQuestions": [
+          "Explain SQL Joins (Inner Join, Left Outer Join, Right Outer Join, Full Outer Join) with query examples and Venn diagrams.",
+          "Explain ACID Properties of transactions with banking account transfer scenario."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA203",
+    "name": "Advanced Web Technology",
+    "shortName": "AWT (PHP & MySQL)",
+    "description": "Server-side programming using PHP, session management, form processing, MySQL database connectivity (PDO/mysqli).",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "PHP Fundamentals & Server Execution",
+        "topics": [
+          {
+            "id": "awt-u1-t1",
+            "title": "PHP Syntax, Variables, Superglobals & Arrays",
+            "summary": "PHP tags, data types, $_GET, $_POST, $_REQUEST, indexed and associative arrays."
+          }
+        ],
+        "examQuestions": [
+          "Differentiate between $_GET and $_POST methods in PHP with form processing examples.",
+          "Explain associative arrays in PHP and iterate over them using foreach loop."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "State Management: Cookies & Sessions",
+        "topics": [
+          {
+            "id": "awt-u2-t1",
+            "title": "HTTP Cookies vs PHP Sessions",
+            "summary": "setcookie(), $_COOKIE, session_start(), $_SESSION, session_destroy(), session security."
+          }
+        ],
+        "examQuestions": [
+          "Compare Cookies and Sessions in PHP. Write code to create, read, and destroy a login session."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "PHP MySQL Database Connectivity",
+        "topics": [
+          {
+            "id": "awt-u3-t1",
+            "title": "CRUD Operations with MySQLi and Prepared Statements",
+            "summary": "Database connection, INSERT, SELECT, UPDATE, DELETE queries, SQL injection prevention."
+          }
+        ],
+        "examQuestions": [
+          "Write a complete PHP script to connect to MySQL database and implement User Registration and Login with password hashing."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "AJAX & JSON Integration",
+        "topics": [
+          {
+            "id": "awt-u4-t1",
+            "title": "Asynchronous Requests & JSON Parsing",
+            "summary": "XMLHttpRequest, fetch API, json_encode(), json_decode(), asynchronous form validation."
+          }
+        ],
+        "examQuestions": [
+          "Explain AJAX workflow with XMLHttpRequest object and fetch API with an asynchronous live search example."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA204",
+    "name": "Advanced Statistical Methods",
+    "shortName": "Statistics-2",
+    "description": "Correlation, regression analysis, hypothesis testing (z-test, t-test, chi-square), ANOVA, and time series analysis.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Correlation & Regression Analysis",
+        "topics": [
+          {
+            "id": "asm-u1-t1",
+            "title": "Karl Pearson Correlation & Linear Regression Lines",
+            "summary": "Scatter diagrams, Pearson coefficient r, Spearman rank correlation, regression line equations of Y on X and X on Y."
+          }
+        ],
+        "examQuestions": [
+          "Calculate Karl Pearson’s coefficient of correlation (r) for given bivariate data. Interpret the result.",
+          "Derive regression equations of Y on X and X on Y using the method of least squares."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Testing of Hypothesis & Large Sample Tests",
+        "topics": [
+          {
+            "id": "asm-u2-t1",
+            "title": "Null Hypothesis, Type I/II Errors & Z-Test",
+            "summary": "H0 vs H1, critical region, p-value, 1% and 5% level of significance, testing difference of means for large samples."
+          }
+        ],
+        "examQuestions": [
+          "Explain Type I and Type II errors in hypothesis testing with decision matrix diagram.",
+          "Perform Z-test to check if two independent sample means differ significantly at 5% significance level."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Small Sample Tests & Chi-Square",
+        "topics": [
+          {
+            "id": "asm-u3-t1",
+            "title": "Student’s t-Test & Chi-Square Test of Independence",
+            "summary": "Degrees of freedom, paired t-test for before-and-after experiments, contingency tables, goodness of fit."
+          }
+        ],
+        "examQuestions": [
+          "Explain Chi-Square Test of Independence with formula, degrees of freedom, and contingency table calculation.",
+          "Apply Paired t-Test for evaluating training program effectiveness."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA205",
+    "name": "Mathematics-2",
+    "shortName": "Maths-2",
+    "description": "Integral calculus, definite integrals, differential equations, graph theory basics, and vector algebra.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Integral Calculus & Techniques",
+        "topics": [
+          {
+            "id": "m2-u1-t1",
+            "title": "Integration by Substitution, Parts & Partial Fractions",
+            "summary": "Standard integration formulas, definite integrals, Fundamental Theorem of Calculus, area under curves."
+          }
+        ],
+        "examQuestions": [
+          "Evaluate definite integrals using Integration by Parts formula: int u dv = uv - int v du.",
+          "Find area bounded between parabolas and straight lines using definite integrals."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Differential Equations of First Order",
+        "topics": [
+          {
+            "id": "m2-u2-t1",
+            "title": "Variable Separable, Homogeneous & Linear Equations",
+            "summary": "Order and degree, variable separable method, integrating factor (I.F.) for linear differential equations dy/dx + Py = Q."
+          }
+        ],
+        "examQuestions": [
+          "Solve first order linear differential equations using Integrating Factor method.",
+          "Solve homogeneous differential equations dy/dx = f(y/x) using substitution y = vx."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Introduction to Graph Theory",
+        "topics": [
+          {
+            "id": "m2-u3-t1",
+            "title": "Graphs, Paths, Trees & Planar Graphs",
+            "summary": "Vertices, edges, degree of vertex, Handshaking Lemma, Euler and Hamiltonian paths, spanning trees."
+          }
+        ],
+        "examQuestions": [
+          "State and prove the Handshaking Lemma for undirected graphs: sum deg(v) = 2|E|.",
+          "Define Eulerian graph and Hamiltonian graph with examples and diagrams."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA206",
+    "name": "Data Analytics using Spreadsheet",
+    "shortName": "Spreadsheet Analytics",
+    "description": "Advanced Excel modeling, What-If analysis, Goal Seek, Solver, statistical charting, and macro automation.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "What-If Analysis & Optimization",
+        "topics": [
+          {
+            "id": "das-u1-t1",
+            "title": "Goal Seek, Data Tables & Solver Tool",
+            "summary": "Scenario manager, one-variable and two-variable data tables, linear programming constraints using Solver."
+          }
+        ],
+        "examQuestions": [
+          "Explain Goal Seek and Scenario Manager in Excel with a business break-even analysis example."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Advanced Data Visualization & Dashboards",
+        "topics": [
+          {
+            "id": "das-u2-t1",
+            "title": "Interactive Dashboards, Slicers & Sparklines",
+            "summary": "PivotCharts, slicers, timeline filters, conditional formatting with color scales, KPI indicator cards."
+          }
+        ],
+        "examQuestions": [
+          "Design an interactive executive sales dashboard in Excel using Pivot Tables, Slicers, and Charts."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA207",
+    "name": "Technical Writing",
+    "shortName": "Tech Writing",
+    "description": "Technical report preparation, project documentation, research abstracts, manual creation, and APA referencing.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Technical Reports & Proposals",
+        "topics": [
+          {
+            "id": "tw-u1-t1",
+            "title": "Structure of Technical Project Report",
+            "summary": "Title page, abstract, table of contents, introduction, methodology, results, conclusion, IEEE/APA references."
+          }
+        ],
+        "examQuestions": [
+          "Outline the standard structure of an undergraduate software engineering technical project report."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 2,
+    "code": "BCA208",
+    "name": "Professional Ethics",
+    "shortName": "Ethics",
+    "description": "Cyber ethics, intellectual property rights (IPR), software licensing, privacy regulations, and professional conduct.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Cyber Ethics & Intellectual Property",
+        "topics": [
+          {
+            "id": "pe-u1-t1",
+            "title": "IPR, Patents, Copyright & Data Privacy",
+            "summary": "Software piracy, open source vs proprietary licenses, digital rights, IT Act 2000, GDPR principles."
+          }
+        ],
+        "examQuestions": [
+          "Explain Intellectual Property Rights (IPR) covering Copyrights, Patents, and Trademarks for software.",
+          "Discuss major provisions and penal sections of the Information Technology Act (IT Act 2000)."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 3,
+    "code": "BCA301",
+    "name": "Operating System",
+    "shortName": "OS (Operating Systems)",
+    "description": "Process management, CPU scheduling, inter-process communication, Deadlocks, memory management, virtual memory, file systems.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Introduction to OS & Process Management",
+        "topics": [
+          {
+            "id": "os-u1-t1",
+            "title": "OS Roles, Dual-Mode Operation & System Calls",
+            "summary": "Kernel vs User mode, Interrupt handling, System calls (fork, exec, wait, exit), monolithic vs microkernel."
+          },
+          {
+            "id": "os-u1-t2",
+            "title": "Process State Transitions & PCB",
+            "summary": "New, Ready, Running, Waiting, Terminated states; Process Control Block (PCB) attributes, context switching."
+          },
+          {
+            "id": "os-u1-t3",
+            "title": "CPU Scheduling Algorithms",
+            "summary": "Preemptive vs Non-preemptive; FCFS, SJF, SRTF, Round Robin (RR), Priority Scheduling; Turnaround and Waiting times."
+          }
+        ],
+        "examQuestions": [
+          "Explain Dual-Mode Operation (User Mode vs Kernel Mode) in modern operating systems and how privileged instructions are protected.",
+          "What is a System Call? Explain the step-by-step mechanism of system call execution with a diagram.",
+          "Draw and explain the 5-State Process Transition Model in detail with triggers.",
+          "What is a Process Control Block (PCB)? Detail the information maintained inside a PCB.",
+          "Consider 4 processes with given Burst Times and Arrival Times. Draw Gantt Chart and calculate Average Turnaround and Waiting Times for Round Robin (Quantum = 2ms) and Shortest Remaining Time First (SRTF).",
+          "Compare FCFS, SJF, and Round Robin scheduling algorithms with trade-offs."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Process Synchronization & Deadlocks",
+        "topics": [
+          {
+            "id": "os-u2-t1",
+            "title": "Critical Section Problem & Semaphores",
+            "summary": "Race condition, 3 requirements (Mutual Exclusion, Progress, Bounded Waiting); Peterson’s Solution; Counting and Binary Semaphores."
+          },
+          {
+            "id": "os-u2-t2",
+            "title": "Deadlock: 4 Coffman Conditions & Prevention",
+            "summary": "Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait; Resource Allocation Graph (RAG); Deadlock avoidance vs prevention."
+          }
+        ],
+        "examQuestions": [
+          "What is the Critical Section problem? State and explain the three necessary criteria to solve it.",
+          "Explain Counting Semaphores and Binary Semaphores with wait() (P) and signal() (V) atomic operations.",
+          "Explain the classical Producer-Consumer Problem and its solution using Semaphores.",
+          "Define Deadlock in Operating Systems. Explain the four necessary Coffman conditions with real-life analogies. How can each condition be invalidated for prevention?"
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Memory Management & Virtual Memory",
+        "topics": [
+          {
+            "id": "os-u3-t1",
+            "title": "Paging, Segmentation & Address Translation",
+            "summary": "Logical vs Physical address space; Page tables, Translation Lookaside Buffer (TLB), internal vs external fragmentation."
+          },
+          {
+            "id": "os-u3-t2",
+            "title": "Virtual Memory & Page Replacement Algorithms",
+            "summary": "Demand paging, Page fault sequence, Belady’s anomaly, FIFO, Optimal (OPT), Least Recently Used (LRU) algorithms."
+          }
+        ],
+        "examQuestions": [
+          "Explain Paging hardware with address translation mechanism using Page Table and TLB. Draw neat schematic diagram.",
+          "Differentiate between Paging and Segmentation with a comparative analysis table.",
+          "For reference string: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2 with 3 frames, calculate page faults using FIFO, LRU, and Optimal algorithms."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "File Systems & Storage Management",
+        "topics": [
+          {
+            "id": "os-u4-t1",
+            "title": "File Allocation Methods & Disk Scheduling",
+            "summary": "Contiguous, Linked, Indexed allocation; Disk scheduling: FCFS, SSTF, SCAN (Elevator), C-SCAN, LOOK."
+          }
+        ],
+        "examQuestions": [
+          "Compare Contiguous, Linked, and Indexed file allocation methods with advantages and disadvantages.",
+          "Explain SCAN and C-SCAN Disk Scheduling algorithms with head movement diagrams."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 3,
+    "code": "BCA302",
+    "name": "Object Oriented Programming with Java",
+    "shortName": "Java (OOP)",
+    "description": "Java OOP concepts, JVM architecture, inheritance, polymorphism, interfaces, packages, exception handling, multithreading, collections.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Java Architecture & Language Basics",
+        "topics": [
+          {
+            "id": "java-u1-t1",
+            "title": "Java Features, JVM, JRE, and JDK Architecture",
+            "summary": "Platform independence, bytecode, JVM execution engine, JIT compiler, ClassLoader, garbage collection."
+          }
+        ],
+        "examQuestions": [
+          "Explain JVM (Java Virtual Machine) Architecture with neat block diagram covering ClassLoader, Memory areas, and Execution Engine.",
+          "Why is Java called platform-independent and secure? Discuss the role of Bytecode and JVM."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Core OOP Principles in Java",
+        "topics": [
+          {
+            "id": "java-u2-t1",
+            "title": "Classes, Objects, Constructors & this Keyword",
+            "summary": "Object instantiation, default vs parameterized constructors, constructor overloading, constructor chaining with this()."
+          },
+          {
+            "id": "java-u2-t2",
+            "title": "Inheritance & Method Overriding",
+            "summary": "Single, Multilevel, Hierarchical inheritance; super keyword; runtime polymorphism; final keyword with classes and methods."
+          },
+          {
+            "id": "java-u2-t3",
+            "title": "Abstract Classes & Interfaces",
+            "summary": "Pure abstraction, default and static methods in interfaces, multiple inheritance realization in Java."
+          }
+        ],
+        "examQuestions": [
+          "Explain Constructor Overloading and Constructor Chaining in Java with complete code examples.",
+          "What is Polymorphism? Differentiate between Method Overloading (Compile-time) and Method Overriding (Runtime) with Java programs.",
+          "Compare Abstract Class and Interface in Java with a structural comparison table and code sample.",
+          "Demonstrate how Java achieves Multiple Inheritance using Interfaces."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Packages, Exceptions & Multithreading",
+        "topics": [
+          {
+            "id": "java-u3-t1",
+            "title": "Packages & Access Specifiers",
+            "summary": "User-defined packages, classpath, private, default, protected, public access scopes across packages."
+          },
+          {
+            "id": "java-u3-t2",
+            "title": "Exception Handling Mechanism",
+            "summary": "try, catch, finally, throw, throws; checked vs unchecked exceptions; creating custom user exceptions."
+          },
+          {
+            "id": "java-u3-t3",
+            "title": "Multithreading & Thread Synchronization",
+            "summary": "Thread lifecycle, Thread class vs Runnable interface, sleep(), join(), synchronized keyword, inter-thread communication (wait, notify)."
+          }
+        ],
+        "examQuestions": [
+          "Explain Access Specifiers in Java (private, default, protected, public) with visibility matrix.",
+          "Write steps and code to create and import a user-defined package in Java.",
+          "Explain Exception Handling hierarchy in Java. Write a program demonstrating try, catch, and finally blocks.",
+          "How do you create and throw a Custom (User-defined) Exception in Java? Give a bank insufficient balance example.",
+          "Explain the Life Cycle of a Thread in Java with state diagram. Compare extending Thread class vs implementing Runnable interface.",
+          "Why is Thread Synchronization necessary in Java? Demonstrate synchronized methods with code."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "Collections Framework & File Streams",
+        "topics": [
+          {
+            "id": "java-u4-t1",
+            "title": "Java Collections: List, Set, and Map",
+            "summary": "ArrayList, LinkedList, HashSet, HashMap, Iterator, Generics in Java."
+          }
+        ],
+        "examQuestions": [
+          "Explain Java Collection Framework hierarchy. Differentiate between ArrayList and LinkedList with internal working.",
+          "Explain HashMap in Java: internal working of hashing, buckets, and collision resolution."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 3,
+    "code": "BCA303",
+    "name": "Computer Networking",
+    "shortName": "CN (Networking)",
+    "description": "OSI 7-layer model, TCP/IP protocol suite, transmission media, framing, IP addressing, subnetting, routing, transport layer protocols.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Network Models & Physical Layer",
+        "topics": [
+          {
+            "id": "cn-u1-t1",
+            "title": "OSI 7-Layer Reference Model vs TCP/IP Suite",
+            "summary": "Physical, Data Link, Network, Transport, Session, Presentation, Application layers; encapsulation and protocol data units (PDU)."
+          },
+          {
+            "id": "cn-u1-t2",
+            "title": "Transmission Media & Network Topologies",
+            "summary": "Twisted pair, Coaxial, Fiber optic cables; Mesh, Star, Bus, Ring topologies; circuit vs packet switching."
+          }
+        ],
+        "examQuestions": [
+          "Explain the OSI 7-Layer Reference Model in detail. State the primary responsibilities and protocols of each layer with neat diagram.",
+          "Compare OSI Reference Model with TCP/IP Protocol Suite with layer mapping diagram.",
+          "Compare Star, Mesh, and Bus network topologies with diagrams, advantages, and disadvantages.",
+          "Compare Guided media (Fiber Optic, UTP) vs Unguided wireless transmission."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Data Link Layer & Error Control",
+        "topics": [
+          {
+            "id": "cn-u2-t1",
+            "title": "Framing, Error Detection (CRC) & Sliding Window",
+            "summary": "Bit stuffing, Byte stuffing; Cyclic Redundancy Check (CRC), Checksum; Stop-and-Wait, Go-Back-N, Selective Repeat ARQ."
+          }
+        ],
+        "examQuestions": [
+          "Explain Cyclic Redundancy Check (CRC) error detection method with a polynomial division numerical example.",
+          "Explain Go-Back-N and Selective Repeat Sliding Window protocols with sequence diagrams."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Network Layer, IP Addressing & Routing",
+        "topics": [
+          {
+            "id": "cn-u3-t1",
+            "title": "IPv4 Addressing, Subnetting & CIDR",
+            "summary": "Class A, B, C, D, E addresses; Subnet masks, network ID, broadcast ID, CIDR slash notation, IPv6 comparison."
+          },
+          {
+            "id": "cn-u3-t2",
+            "title": "Routing Protocols: Distance Vector vs Link State",
+            "summary": "Distance Vector Routing (Bellman-Ford, Count-to-Infinity problem); Link State Routing (Dijkstra algorithm, OSPF)."
+          }
+        ],
+        "examQuestions": [
+          "Explain Classful IPv4 Addressing. Given IP address 192.168.10.45/26, determine Network Address, Broadcast Address, and Subnet Mask.",
+          "Differentiate between IPv4 and IPv6 packet headers and address spaces.",
+          "Explain Link State Routing algorithm using Dijkstra shortest path algorithm with a network graph example.",
+          "Explain Distance Vector Routing and the Count-to-Infinity problem."
+        ]
+      },
+      {
+        "unitNumber": 4,
+        "unitName": "Transport & Application Layer Protocols",
+        "topics": [
+          {
+            "id": "cn-u4-t1",
+            "title": "TCP vs UDP Protocols & 3-Way Handshake",
+            "summary": "Connection-oriented vs connectionless, 3-way handshake (SYN, SYN-ACK, ACK), sliding window flow control, congestion avoidance."
+          }
+        ],
+        "examQuestions": [
+          "Compare TCP and UDP protocols in detail across connection type, header size, speed, and use cases. Illustrate the TCP 3-way handshake.",
+          "Explain DNS (Domain Name System) architecture, query resolution process, and DNS record types."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 3,
+    "code": "BCA304",
+    "name": "Mathematical Foundation for AI",
+    "shortName": "Maths for AI",
+    "description": "Linear algebra (vectors, matrices, eigenvalues), multivariable calculus (gradients, partial derivatives), and probability foundations for ML.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Linear Algebra for Machine Learning",
+        "topics": [
+          {
+            "id": "mfai-u1-t1",
+            "title": "Vector Spaces, Dot Products & Matrix Decomposition",
+            "summary": "Vector spaces, linear independence, dot and cross products, orthogonal matrices, Eigenvalues and Eigenvectors."
+          }
+        ],
+        "examQuestions": [
+          "Find Eigenvalues and corresponding Eigenvectors for a given 2x2 or 3x3 matrix.",
+          "Explain the geometric intuition of Principal Component Analysis (PCA) and Eigen decomposition."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Multivariable Calculus & Gradient Descent",
+        "topics": [
+          {
+            "id": "mfai-u2-t1",
+            "title": "Partial Derivatives, Gradient Vector & Gradient Descent",
+            "summary": "Partial differentiation, Jacobian matrix, Hessian matrix, learning rate, Batch vs Stochastic Gradient Descent."
+          }
+        ],
+        "examQuestions": [
+          "Explain Gradient Descent optimization algorithm with mathematical derivation, learning rate tuning, and loss curve graph."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Probability & Information Theory for AI",
+        "topics": [
+          {
+            "id": "mfai-u3-t1",
+            "title": "Entropy, Cross-Entropy & Maximum Likelihood",
+            "summary": "Shannon Entropy, Cross-Entropy loss in neural networks, Kullback-Leibler (KL) divergence, Maximum Likelihood Estimation (MLE)."
+          }
+        ],
+        "examQuestions": [
+          "Define Entropy and Cross-Entropy loss. Explain why cross-entropy is preferred in classification neural networks."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 3,
+    "code": "BCA305",
+    "name": "Web Development Project",
+    "shortName": "Web Project",
+    "description": "Full-stack dynamic web development project applying database design, backend APIs, responsive frontends, and authentication.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Full-Stack Architecture & Deployment",
+        "topics": [
+          {
+            "id": "wdp-u1-t1",
+            "title": "MVC Architecture, REST APIs & Session Auth",
+            "summary": "Model-View-Controller design pattern, RESTful endpoint conventions, token and session auth, project documentation."
+          }
+        ],
+        "examQuestions": [
+          "Explain the Model-View-Controller (MVC) architectural pattern with a data-flow diagram."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 3,
+    "code": "BCA306",
+    "name": "Version Controlling",
+    "shortName": "Git & GitHub",
+    "description": "Git distributed version control, commit history, branching strategies, merge conflicts, GitHub remote repositories, and PR workflows.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Git Basics, Branching & Collaborative Workflows",
+        "topics": [
+          {
+            "id": "vc-u1-t1",
+            "title": "Git Commands, Branching & Resolving Merge Conflicts",
+            "summary": "git init, add, commit, push, pull, branch, checkout, merge, rebase, resolving merge conflicts, pull request workflow."
+          }
+        ],
+        "examQuestions": [
+          "Explain Git three-tree architecture (Working Directory, Staging Area, Repository) with command transitions.",
+          "Explain the step-by-step process of creating a branch, resolving a merge conflict, and submitting a Pull Request in Git/GitHub."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 3,
+    "code": "BCA307",
+    "name": "Design Thinking and Innovation",
+    "shortName": "Design Thinking",
+    "description": "Human-centered design mindset: Empathize, Define, Ideate, Prototype, and Test frameworks for software innovations.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "The 5-Stage Design Thinking Framework",
+        "topics": [
+          {
+            "id": "dti-u1-t1",
+            "title": "Empathize, Define, Ideate, Prototype, and Test",
+            "summary": "User empathy maps, problem statement framing, brainstorming, low-fidelity wireframing, user feedback loops."
+          }
+        ],
+        "examQuestions": [
+          "Explain the five stages of the Design Thinking process with a practical software product case study."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 4,
+    "code": "BCA401",
+    "name": "Python Programming",
+    "shortName": "Python",
+    "description": "Python syntax, control flow, data structures (Lists, Tuples, Dictionaries, Sets), OOP, File I/O, NumPy, and Pandas basics.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Python Foundations & Data Structures",
+        "topics": [
+          {
+            "id": "py-u1-t1",
+            "title": "Lists, Tuples, Dictionaries & List Comprehension",
+            "summary": "Mutable vs immutable structures, slicing, dictionary key-value methods, list comprehensions, lambda functions."
+          }
+        ],
+        "examQuestions": [
+          "Differentiate between List and Tuple in Python with syntax, mutability, and performance examples.",
+          "Explain List Comprehension in Python with syntax and examples converting conventional loops."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "OOP, Modules & File Handling in Python",
+        "topics": [
+          {
+            "id": "py-u2-t1",
+            "title": "Classes, __init__, Inheritance & Exception Handling",
+            "summary": "Class instantiation, self parameter, constructor __init__, try-except-finally blocks, reading and writing files."
+          }
+        ],
+        "examQuestions": [
+          "Demonstrate Object Oriented Programming in Python: define a class with __init__ constructor and show inheritance."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Data Science Libraries: NumPy & Pandas",
+        "topics": [
+          {
+            "id": "py-u3-t1",
+            "title": "NumPy Arrays & Pandas DataFrames",
+            "summary": "ndarray operations, broadcasting, Pandas Series and DataFrame, filtering, groupby, reading CSV files."
+          }
+        ],
+        "examQuestions": [
+          "Explain NumPy array creation, slicing, and broadcasting with code examples.",
+          "Explain Pandas DataFrame operations: loading CSV, selecting columns, filtering rows, and groupby aggregations."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 4,
+    "code": "BCA402",
+    "name": "Software Engineering",
+    "shortName": "SE (Software Engg)",
+    "description": "SDLC models (Waterfall, Spiral, Agile Scrum), SRS documentation, UML diagrams, software testing, and maintenance.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Software Process Models & Agile",
+        "topics": [
+          {
+            "id": "se-u1-t1",
+            "title": "Waterfall, Spiral Model & Agile Scrum Framework",
+            "summary": "Phases of SDLC; sequential vs iterative models; Agile principles, Scrum roles (Product Owner, Scrum Master), sprints."
+          }
+        ],
+        "examQuestions": [
+          "Compare Waterfall Model and Spiral Model with diagrams, strengths, and risk-management trade-offs.",
+          "Explain the Agile Scrum methodology: Scrum Team roles, Sprint planning, Daily Standup, and Sprint Retrospective."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Software Requirements Specification & UML Modeling",
+        "topics": [
+          {
+            "id": "se-u2-t1",
+            "title": "SRS Characteristics, Use Case & Class Diagrams",
+            "summary": "Functional vs non-functional requirements; IEEE 830 SRS standard; Use Case Diagrams, Class Diagrams, Sequence Diagrams."
+          }
+        ],
+        "examQuestions": [
+          "What is SRS? Explain the characteristics of a good Software Requirements Specification document according to IEEE standards.",
+          "Draw Use Case Diagram and Class Diagram for an Online Food Delivery or Hospital Management System."
+        ]
+      },
+      {
+        "unitNumber": 3,
+        "unitName": "Software Testing & Quality Assurance",
+        "topics": [
+          {
+            "id": "se-u3-t1",
+            "title": "White-Box vs Black-Box Testing & Verification/Validation",
+            "summary": "Unit, Integration, System, Acceptance testing; Boundary Value Analysis (BVA), Equivalence Partitioning; Cyclomatic Complexity."
+          }
+        ],
+        "examQuestions": [
+          "Compare Black-Box Testing and White-Box Testing. Explain Boundary Value Analysis (BVA) and Equivalence Class Partitioning.",
+          "Explain Cyclomatic Complexity with Control Flow Graph calculation."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 4,
+    "code": "BCA403",
+    "name": "Mobile Application Development",
+    "shortName": "Mobile App (Android/Flutter)",
+    "description": "Android architecture, Activity lifecycle, UI layouts, Intents, SQLite local storage, and modern cross-platform development.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Android Architecture & Activity Lifecycle",
+        "topics": [
+          {
+            "id": "mad-u1-t1",
+            "title": "Android Stack & Activity Lifecycle States",
+            "summary": "Linux kernel, HAL, native libraries, Android runtime (ART), Application Framework; onCreate, onStart, onResume, onPause, onStop, onDestroy."
+          }
+        ],
+        "examQuestions": [
+          "Explain the Android OS Architecture stack with block diagram.",
+          "Explain the Activity Lifecycle in Android with state transition diagram and callback methods."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Intents, UI Layouts & SQLite Storage",
+        "topics": [
+          {
+            "id": "mad-u2-t1",
+            "title": "Explicit vs Implicit Intents & SQLite Database",
+            "summary": "Linear, Relative, Constraint layouts; passing data between Activities via Intent extras; SQLiteOpenHelper CRUD queries."
+          }
+        ],
+        "examQuestions": [
+          "Differentiate between Explicit and Implicit Intents with code snippets.",
+          "Write steps and code to perform CRUD operations using SQLiteOpenHelper in Android."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 4,
+    "code": "BCA404",
+    "name": "Information Security",
+    "shortName": "InfoSec",
+    "description": "CIA triad, cryptography (Symmetric vs Asymmetric), RSA algorithm, digital signatures, firewalls, and network vulnerabilities.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Security Principles & Cryptography",
+        "topics": [
+          {
+            "id": "is-u1-t1",
+            "title": "CIA Triad, Symmetric vs Asymmetric Cryptography & RSA",
+            "summary": "Confidentiality, Integrity, Availability; DES, AES; Public-Private key cryptography, RSA mathematical calculation, Hash functions (SHA-256)."
+          }
+        ],
+        "examQuestions": [
+          "Explain the CIA Triad in Information Security with real-world security violations.",
+          "Explain the RSA algorithm with step-by-step mathematical key generation and encryption/decryption numerical."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 4,
+    "code": "BCA405",
+    "name": "Cloud Computing",
+    "shortName": "Cloud Computing",
+    "description": "NIST cloud definition, service models (IaaS, PaaS, SaaS), deployment models (Public, Private, Hybrid), virtualization, containers.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Cloud Architecture, Service Models & Virtualization",
+        "topics": [
+          {
+            "id": "cc-u1-t1",
+            "title": "IaaS, PaaS, SaaS & Hypervisor Virtualization",
+            "summary": "Cloud characteristics (on-demand self-service, broad network access, resource pooling, rapid elasticity); Type 1 and Type 2 hypervisors."
+          }
+        ],
+        "examQuestions": [
+          "Compare IaaS, PaaS, and SaaS cloud service delivery models with examples and responsibility matrices.",
+          "Explain Virtualization in Cloud Computing. Compare Type-1 (Bare-Metal) and Type-2 (Hosted) Hypervisors."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 5,
+    "code": "BCA501",
+    "name": "Machine Learning",
+    "shortName": "ML",
+    "description": "Supervised vs Unsupervised learning, Linear Regression, Logistic Regression, Decision Trees, K-Means clustering, Neural Networks.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Supervised Learning Algorithms",
+        "topics": [
+          {
+            "id": "ml-u1-t1",
+            "title": "Linear & Logistic Regression, Decision Trees",
+            "summary": "Cost functions, Gradient descent, Sigmoid activation, Information Gain, Gini Impurity, Confusion Matrix, Precision, Recall."
+          }
+        ],
+        "examQuestions": [
+          "Explain Linear Regression and cost function optimization using Gradient Descent.",
+          "Explain Confusion Matrix and calculate Accuracy, Precision, Recall, and F1-Score for a medical prediction model.",
+          "Explain Decision Tree construction using Entropy and Information Gain."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Unsupervised Learning & Deep Learning Basics",
+        "topics": [
+          {
+            "id": "ml-u2-t1",
+            "title": "K-Means Clustering, PCA & Artificial Neural Networks",
+            "summary": "Centroid initialization, Elbow method, Perceptron model, Multi-Layer Perceptron (MLP), backpropagation algorithm."
+          }
+        ],
+        "examQuestions": [
+          "Explain K-Means Clustering algorithm with step-by-step flowchart and the Elbow method for choosing K.",
+          "Explain the working of an Artificial Neural Network (Perceptron, Activation functions, Backpropagation)."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 5,
+    "code": "BCA502",
+    "name": "Web Frameworks",
+    "shortName": "React & Node.js (MERN)",
+    "description": "React component architecture, JSX, hooks (useState, useEffect), Node.js runtime, Express routing, MongoDB integration.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "React.js Component Architecture",
+        "topics": [
+          {
+            "id": "wf-u1-t1",
+            "title": "React Components, Props, State & Hooks",
+            "summary": "Functional components, Virtual DOM reconciliation, useState, useEffect, controlled components, context API."
+          }
+        ],
+        "examQuestions": [
+          "Explain Virtual DOM in React and how reconciliation algorithm improves rendering performance.",
+          "Explain useState and useEffect React Hooks with practical asynchronous data fetching code."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Node.js & Express RESTful APIs",
+        "topics": [
+          {
+            "id": "wf-u2-t1",
+            "title": "Event Loop, Middleware & REST Endpoints",
+            "summary": "Non-blocking I/O event loop, Express routing, custom middleware, JWT authentication, MongoDB Mongoose schema."
+          }
+        ],
+        "examQuestions": [
+          "Explain the Node.js Event Loop architecture and non-blocking asynchronous I/O model.",
+          "Write an Express.js backend script defining REST API routes (GET, POST, PUT, DELETE) with error handling middleware."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 5,
+    "code": "BCA503",
+    "name": "Cyber Security & Forensics",
+    "shortName": "Cyber Forensics",
+    "description": "Digital evidence collection, chain of custody, memory analysis, web application security (OWASP Top 10), penetration testing basics.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Digital Forensics & Incident Response",
+        "topics": [
+          {
+            "id": "csf-u1-t1",
+            "title": "Evidence Acquisition, Chain of Custody & File System Forensics",
+            "summary": "Volatile vs non-volatile memory, bitstream disk imaging, hash verification (MD5/SHA1), legal admissibility."
+          }
+        ],
+        "examQuestions": [
+          "Explain the Digital Forensics Investigation Process (Identification, Preservation, Collection, Analysis, Reporting).",
+          "What is Chain of Custody? Why is it crucial in courtroom presentation of digital evidence?"
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "OWASP Top 10 & Web Vulnerabilities",
+        "topics": [
+          {
+            "id": "csf-u2-t1",
+            "title": "SQL Injection, Cross-Site Scripting (XSS) & CSRF",
+            "summary": "SQLi detection and remediation, Stored vs Reflected XSS, Cross-Site Request Forgery tokens, security headers."
+          }
+        ],
+        "examQuestions": [
+          "Explain SQL Injection (SQLi) attack mechanism with vulnerable code and secure prepared statements remediation.",
+          "Explain Cross-Site Scripting (XSS) attacks (Stored, Reflected, DOM-based) and prevention techniques."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 5,
+    "code": "BCA504",
+    "name": "Big Data Analytics",
+    "shortName": "Big Data",
+    "description": "5 Vs of Big Data, Hadoop HDFS architecture, MapReduce programming paradigm, NoSQL databases, Apache Spark overview.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Hadoop HDFS Architecture & MapReduce",
+        "topics": [
+          {
+            "id": "bda-u1-t1",
+            "title": "HDFS NameNode/DataNode & MapReduce Workflow",
+            "summary": "5 Vs (Volume, Velocity, Variety, Veracity, Value); HDFS block replication; Map, Shuffle and Sort, Reduce phases."
+          }
+        ],
+        "examQuestions": [
+          "Explain HDFS (Hadoop Distributed File System) Architecture with NameNode, DataNode, and block replication.",
+          "Explain MapReduce execution workflow with a Word Count example."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 6,
+    "code": "BCA601",
+    "name": "Internet of Things (IoT)",
+    "shortName": "IoT",
+    "description": "IoT architecture, sensor interfacing, microcontrollers (Arduino/Raspberry Pi), communication protocols (MQTT, CoAP), cloud IoT platforms.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "IoT Architecture & Sensing Protocols",
+        "topics": [
+          {
+            "id": "iot-u1-t1",
+            "title": "IoT 4-Layer Architecture, Sensors & MQTT Protocol",
+            "summary": "Perception, Network, Middleware, Application layers; analog vs digital sensors; publish-subscribe MQTT vs HTTP."
+          }
+        ],
+        "examQuestions": [
+          "Explain the 4-layer IoT Architecture with functional components at each layer.",
+          "Compare MQTT and HTTP protocols for resource-constrained IoT devices."
+        ]
+      },
+      {
+        "unitNumber": 2,
+        "unitName": "Microcontrollers & Smart Applications",
+        "topics": [
+          {
+            "id": "iot-u2-t1",
+            "title": "Arduino/Raspberry Pi & Smart City/Home Systems",
+            "summary": "GPIO pins, PWM, I2C, SPI communication; smart agriculture, home automation, industrial IoT use cases."
+          }
+        ],
+        "examQuestions": [
+          "Design an IoT-based Smart Agriculture Monitoring System with block diagram, sensors, and cloud communication."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 6,
+    "code": "BCA602",
+    "name": "Blockchain Technology",
+    "shortName": "Blockchain",
+    "description": "Decentralized ledgers, cryptographic hashes, Merkle trees, consensus algorithms (PoW, PoS), smart contracts, Ethereum.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "Blockchain Foundations & Consensus",
+        "topics": [
+          {
+            "id": "bc-u1-t1",
+            "title": "Block Architecture, Merkle Tree, PoW & Smart Contracts",
+            "summary": "Block header, nonce, difficulty, Merkle root; Proof of Work vs Proof of Stake; Solidity smart contract execution on EVM."
+          }
+        ],
+        "examQuestions": [
+          "Explain Blockchain internal architecture: Block header, previous block hash, nonce, and Merkle tree.",
+          "Compare Proof of Work (PoW) and Proof of Stake (PoS) consensus mechanisms with security and energy trade-offs."
+        ]
+      }
+    ]
+  },
+  {
+    "semester": 6,
+    "code": "BCA603",
+    "name": "Major Industry Capstone Project",
+    "shortName": "Major Project",
+    "description": "Full-lifecycle software development project executed according to industry Agile standards, complete with live deployment and viva.",
+    "units": [
+      {
+        "unitNumber": 1,
+        "unitName": "End-to-End Software Engineering & Deployment",
+        "topics": [
+          {
+            "id": "mp-u1-t1",
+            "title": "Project Lifecycle, Architecture, Testing & Presentation",
+            "summary": "Problem formulation, feasibility analysis, database design, API security, automated CI/CD deployment, viva defense."
+          }
+        ],
+        "examQuestions": [
+          "Present the architectural design, entity relationship model, and security protocols of your Capstone Project."
+        ]
+      }
+    ]
+  }
+]

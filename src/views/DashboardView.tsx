@@ -25,6 +25,7 @@ import {
 import { soundManager } from '../services/soundManager';
 import { NavigationTab, SubjectItem, AppLanguage } from '../types';
 import { translations } from '../services/i18n';
+import { findSubjectByCodeOrName } from '../data/gtuBcaCurriculum';
 
 interface DashboardViewProps {
   language: AppLanguage;
@@ -475,7 +476,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <button
                     onClick={() => {
                       soundManager.play('button_click');
-                      onNavigate('quiz', '', subj.name);
+                      const match = findSubjectByCodeOrName(subj.name);
+                      const initialTopic = match?.units?.[0]?.topics?.[0]?.title || match?.units?.[0]?.unitName || 'Core Concepts & Syllabus';
+                      onNavigate('quiz', initialTopic, subj.name);
                     }}
                     className="p-1.5 rounded-xl bg-[#004741] text-[#F0EDE4] hover:bg-black transition-colors shrink-0"
                     title="Take Quiz"

@@ -10,7 +10,7 @@ import { User } from '../types';
  * - Event subscriber model mimicking Firebase `onAuthStateChanged`.
  */
 
-const AUTH_SESSION_KEY = 'studymate_auth_session_v2';
+const AUTH_SESSION_KEY = 'studymate_user_session_v3';
 const AUTH_USERS_DB_KEY = 'studymate_registered_accounts_v1';
 const AUTH_SALT = 'studymate_secure_salt_2026';
 
@@ -66,9 +66,13 @@ class AuthService {
 
   private initSession() {
     try {
-      // 1. Purge legacy auto-seeded demo user so unauthenticated visitors start with Login screen
+      // 1. Purge legacy auto-seeded demo user sessions so unauthenticated visitors start directly on the Login screen
       localStorage.removeItem('studymate_auth_user');
+      localStorage.removeItem('studymate_auth_session_v2');
+      localStorage.removeItem('studymate_auth_session_v1');
       sessionStorage.removeItem('studymate_auth_user');
+      sessionStorage.removeItem('studymate_auth_session_v2');
+      sessionStorage.removeItem('studymate_auth_session_v1');
 
       // 2. Read only valid user sessions explicitly logged in
       const stored =

@@ -458,6 +458,7 @@ export default function App() {
               theme={theme}
               subjects={subjects}
               initialSubject={navSubject}
+              initialTopic={navQuery}
               onQuizCompleted={handleQuizCompleted}
             />
           )}

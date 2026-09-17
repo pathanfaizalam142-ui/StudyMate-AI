@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Award,
@@ -21,13 +21,28 @@ import { soundManager } from '../services/soundManager';
 import { api } from '../services/api';
 import { QuizQuestion, QuizResult, SubjectItem, AppLanguage, AppTheme } from '../types';
 import { translations } from '../services/i18n';
+import { findSubjectByCodeOrName, GTU_BCA_CURRICULUM } from '../data/gtuBcaCurriculum';
 
 interface QuizViewProps {
   language: AppLanguage;
   theme: AppTheme;
   subjects: SubjectItem[];
   initialSubject?: string;
+  initialTopic?: string;
   onQuizCompleted: (result: QuizResult) => void;
+}
+
+// Helper: Extract authoritative primary topic for a given subject
+function getAuthoritativeSubjectTopic(subjectNameOrCode: string): string {
+  const matched = findSubjectByCodeOrName(subjectNameOrCode);
+  if (matched && matched.units && matched.units.length > 0) {
+    const firstUnit = matched.units[0];
+    if (firstUnit.topics && firstUnit.topics.length > 0) {
+      return firstUnit.topics[0].title;
+    }
+    return firstUnit.unitName;
+  }
+  return 'Core Concepts & Syllabus';
 }
 
 export const QuizView: React.FC<QuizViewProps> = ({
@@ -35,6 +50,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
   theme,
   subjects,
   initialSubject,
+  initialTopic,
   onQuizCompleted,
 }) => {
   const t = translations[language];
@@ -42,11 +58,18 @@ export const QuizView: React.FC<QuizViewProps> = ({
   // Modes: 'setup' | 'active' | 'review'
   const [mode, setMode] = useState<'setup' | 'active' | 'review'>('setup');
 
+  // Initial subject determination
+  const resolvedInitialSubject =
+    initialSubject || subjects[0]?.name || 'Operating System';
+
   // Setup options
-  const [selectedSubject, setSelectedSubject] = useState(
-    initialSubject || subjects[0]?.name || 'Operating System'
-  );
-  const [topic, setTopic] = useState('Process Scheduling & Deadlocks');
+  const [selectedSubject, setSelectedSubject] = useState(resolvedInitialSubject);
+  const [topic, setTopic] = useState<string>(() => {
+    if (initialTopic && initialTopic.trim()) {
+      return initialTopic.trim();
+    }
+    return getAuthoritativeSubjectTopic(resolvedInitialSubject);
+  });
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [isLoading, setIsLoading] = useState(false);
@@ -62,6 +85,47 @@ export const QuizView: React.FC<QuizViewProps> = ({
   // Completed result
   const [lastResult, setLastResult] = useState<QuizResult | null>(null);
 
+  // Synchronize when initialSubject or initialTopic props change from navigation
+  useEffect(() => {
+    if (initialSubject && initialSubject.trim()) {
+      const nextSubject = initialSubject.trim();
+      setSelectedSubject(nextSubject);
+
+      // Determine topic: use passed initialTopic, or authoritative curriculum topic
+      if (initialTopic && initialTopic.trim()) {
+        setTopic(initialTopic.trim());
+      } else {
+        setTopic(getAuthoritativeSubjectTopic(nextSubject));
+      }
+
+      // Reset any active questions/answers so old quiz questions are never retained
+      setQuestions([]);
+      setUserAnswers([]);
+      setCurrentIndex(0);
+      setMode('setup');
+      setErrorMessage(null);
+    }
+  }, [initialSubject, initialTopic]);
+
+  // Handler for user changing subject in setup dropdown
+  const handleSubjectChange = (newSubjectName: string) => {
+    soundManager.play('button_click');
+    setSelectedSubject(newSubjectName);
+
+    // Dynamic topic resolution: Always set to the selected subject's real primary topic
+    // NEVER retain previous subject's topic!
+    const subjectTopic = getAuthoritativeSubjectTopic(newSubjectName);
+    setTopic(subjectTopic);
+
+    // Stale Quiz Protection: Clear questions, answers, error, and return to clean setup state
+    setQuestions([]);
+    setUserAnswers([]);
+    setCurrentIndex(0);
+    setErrorMessage(null);
+    setIsFallbackMode(false);
+    setFallbackNote(null);
+  };
+
   const startQuizGeneration = async () => {
     soundManager.play('button_click');
     setErrorMessage(null);
@@ -69,10 +133,25 @@ export const QuizView: React.FC<QuizViewProps> = ({
     setFallbackNote(null);
     setIsLoading(true);
 
+    // Clear stale questions and user answers immediately so old ones never show while loading
+    setQuestions([]);
+    setUserAnswers([]);
+    setCurrentIndex(0);
+
+    // Resolve authoritative curriculum metadata for current selection
+    const curriculumMatch = findSubjectByCodeOrName(selectedSubject);
+    const subjectCode = curriculumMatch?.code;
+    const semester = curriculumMatch?.semester;
+
+    // Validate that topic is not empty
+    const activeTopic = topic.trim() || getAuthoritativeSubjectTopic(selectedSubject);
+
     try {
       const res = await api.generateQuiz({
         subject: selectedSubject,
-        topic: topic.trim() || 'Core Syllabus Concepts',
+        subjectCode,
+        semester,
+        topic: activeTopic,
         questionCount,
         difficulty,
         language,
@@ -121,14 +200,24 @@ export const QuizView: React.FC<QuizViewProps> = ({
         });
       }
 
-      if (validated.length === 0) {
+      // Strictly deduplicate questions on client as a defense-in-depth guarantee
+      const uniqueValidated: QuizQuestion[] = [];
+      const seenTexts = new Set<string>();
+      for (const item of validated) {
+        const norm = (item.question || '').toLowerCase().replace(/[^\w\u0900-\u097F]/g, '').trim();
+        if (!norm || seenTexts.has(norm)) continue;
+        seenTexts.add(norm);
+        uniqueValidated.push(item);
+      }
+
+      if (uniqueValidated.length === 0) {
         throw new Error('Unable to generate quiz right now. Please try again.');
       }
 
-      setQuestions(validated);
+      setQuestions(uniqueValidated);
       setIsFallbackMode(Boolean(res.isFallback));
       setFallbackNote(res.note || null);
-      setUserAnswers(new Array(validated.length).fill(null));
+      setUserAnswers(new Array(uniqueValidated.length).fill(null));
       setCurrentIndex(0);
       setMode('active');
       soundManager.play('card_open');
@@ -224,6 +313,12 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
   const handleResetSetup = () => {
     soundManager.play('button_click');
+    setQuestions([]);
+    setUserAnswers([]);
+    setCurrentIndex(0);
+    setErrorMessage(null);
+    setIsFallbackMode(false);
+    setFallbackNote(null);
     setMode('setup');
   };
 
@@ -256,10 +351,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
               </label>
               <select
                 value={selectedSubject}
-                onChange={(e) => {
-                  soundManager.play('button_click');
-                  setSelectedSubject(e.target.value);
-                }}
+                onChange={(e) => handleSubjectChange(e.target.value)}
                 className="w-full py-2 sm:py-2.5 px-3 rounded-xl border border-black/15 dark:border-white/15 bg-[#F0EDE4]/40 dark:bg-black/30 text-black dark:text-[#F0EDE4] text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#004741]"
               >
                 {subjects.map((s) => (

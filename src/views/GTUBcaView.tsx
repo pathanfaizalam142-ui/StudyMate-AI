@@ -179,17 +179,18 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
     soundManager.play('button_click');
     const subjectContext = currentSubject
       ? `${currentSubject.name}`
-      : 'Operating System';
+      : (currentSemesterData?.subjects?.[0]?.name ?? 'Core Subject');
     onNavigate('exam_mode', questionText, subjectContext);
   };
 
   // Launch Quiz for Subject or Topic
   const handleLaunchQuiz = (topicTitle?: string) => {
     soundManager.play('button_click');
-    const subjectContext = currentSubject?.name || 'Operating System';
+    const subjectContext = currentSubject?.name || (currentSemesterData?.subjects?.[0]?.name ?? 'Core Subject');
+    const defaultTopic = currentSubject?.units?.[0]?.topics?.[0]?.title || currentSubject?.units?.[0]?.unitName || currentSubject?.name || 'Core Concepts';
     onNavigate(
       'quiz',
-      topicTitle || currentSubject?.name || 'Core Concepts',
+      topicTitle || defaultTopic,
       subjectContext
     );
   };
