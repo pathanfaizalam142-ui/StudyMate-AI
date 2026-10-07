@@ -989,8 +989,7 @@ export function getFallbackQuiz(
   let selectedPoolHi: QuizQuestion[] = [];
 
   if (
-    sc === "bca402" ||
-    sc === "bca205" ||
+    sc === "bca303" ||
     s.includes("network") ||
     s.includes("networking") ||
     s.includes("data communication")
@@ -998,16 +997,14 @@ export function getFallbackQuiz(
     selectedPoolEn = netQuestionsEn;
     selectedPoolHi = netQuestionsHi;
   } else if (
-    sc === "bca303" ||
-    sc === "bca501" ||
+    sc === "bca302" ||
     s.includes("java") ||
-    s.includes("oop") ||
-    s.includes("object oriented")
+    s.includes("object oriented programming with java")
   ) {
     selectedPoolEn = javaQuestionsEn;
     selectedPoolHi = javaQuestionsHi;
   } else if (
-    sc === "bca302" ||
+    sc === "bca301" ||
     s.includes("operating system") ||
     s.includes(" os") ||
     s === "os" ||
@@ -1018,7 +1015,6 @@ export function getFallbackQuiz(
     selectedPoolHi = osQuestionsHi;
   } else if (
     sc === "bca202" ||
-    sc === "bca401" ||
     s.includes("database") ||
     s.includes("dbms") ||
     s.includes("sql") ||
@@ -1028,35 +1024,27 @@ export function getFallbackQuiz(
     selectedPoolHi = dbmsQuestionsHi;
   } else if (
     sc === "bca201" ||
-    sc === "bca102" ||
-    s.includes("data structure") ||
-    s.includes("programming in c") ||
-    s.includes("fundamental of programming") ||
-    s.includes("c++") ||
-    s.includes("algorithm")
+    s.includes("data structure")
   ) {
     selectedPoolEn = dsQuestionsEn;
     selectedPoolHi = dsQuestionsHi;
   } else if (
     sc === "bca103" ||
-    sc === "bca304" ||
-    s.includes("web") ||
-    s.includes("php") ||
-    s.includes("javascript") ||
-    s.includes("html")
+    s.includes("fundamentals of web technology") ||
+    s.includes("html") ||
+    s.includes("javascript")
   ) {
     selectedPoolEn = webQuestionsEn;
     selectedPoolHi = webQuestionsHi;
   } else if (
-    sc === "bca403" ||
+    sc === "bca401" ||
     s.includes("python")
   ) {
     selectedPoolEn = pythonQuestionsEn;
     selectedPoolHi = pythonQuestionsHi;
   } else if (
-    sc === "bca404" ||
+    sc === "bca402" ||
     s.includes("software engineering") ||
-    s.includes("software") ||
     s === "se"
   ) {
     selectedPoolEn = seQuestionsEn;
@@ -1064,8 +1052,7 @@ export function getFallbackQuiz(
   } else if (
     sc === "bca101" ||
     s.includes("computer organization") ||
-    s.includes("fco") ||
-    s.includes("architecture")
+    s.includes("fco")
   ) {
     selectedPoolEn = coQuestionsEn;
     selectedPoolHi = coQuestionsHi;

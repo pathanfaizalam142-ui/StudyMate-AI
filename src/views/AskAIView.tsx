@@ -196,7 +196,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
         .catch(() => {});
     } else {
       navigator.clipboard.writeText(text);
-      alert('Explanation copied to clipboard for sharing!');
+      soundManager.play('save');
     }
   };
 
@@ -213,7 +213,6 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
   const handleToggleSpeech = (msgId: string, text: string) => {
     soundManager.play('button_click');
     if (typeof window === 'undefined' || !window.speechSynthesis) {
-      alert('Text-to-speech is not supported on this browser.');
       return;
     }
 
@@ -249,20 +248,18 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
 
   const handleClearChat = () => {
     soundManager.play('delete');
-    if (window.confirm(language === 'hi' ? 'क्या आप चैट इतिहास साफ़ करना चाहते हैं?' : 'Clear current chat history?')) {
-      const initialAssistantMessage: ChatMessage = {
-        id: `welcome-${Date.now()}`,
-        role: 'assistant',
-        text:
-          language === 'hi'
-            ? 'चैट इतिहास साफ़ कर दिया गया है। नया प्रश्न पूछें!'
-            : 'Chat history cleared. What would you like to study next?',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isFallback: false,
-      };
-      setMessages([initialAssistantMessage]);
-      localStorage.removeItem('studymate_chat_history');
-    }
+    const initialAssistantMessage: ChatMessage = {
+      id: `welcome-${Date.now()}`,
+      role: 'assistant',
+      text:
+        language === 'hi'
+          ? 'चैट इतिहास साफ़ कर दिया गया है। नया प्रश्न पूछें!'
+          : 'Chat history cleared. What would you like to study next?',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isFallback: false,
+    };
+    setMessages([initialAssistantMessage]);
+    localStorage.removeItem('studymate_chat_history');
   };
 
   const handleVoiceInput = () => {
@@ -272,7 +269,6 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert('Voice recognition is not supported in this browser. Please use a Chromium-based browser or type your question.');
       return;
     }
 
@@ -306,32 +302,32 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
   };
 
   return (
-    <div id="ask-ai-view" className="flex flex-col h-[calc(100dvh-9.5rem)] md:h-[calc(100dvh-7rem)] max-w-4xl mx-auto w-full min-w-0">
+    <div id="ask-ai-view" className="flex-1 flex flex-col max-w-4xl mx-auto w-full min-w-0 min-h-0">
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-black/10 dark:border-white/10 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-black/10 dark:border-[#263449] shrink-0">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg sm:text-xl font-display font-black text-black dark:text-[#F0EDE4] tracking-tight">
+            <h1 className="text-lg sm:text-xl font-display font-black text-black dark:text-[#F1F5F9] tracking-tight">
               {t.askHeader}
             </h1>
             
             {/* Connection Status: Gemini 3.8 Flash vs Demo Mode */}
             {isGeminiConnected === false ? (
               <span
-                className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1.5 shrink-0"
+                className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 shrink-0"
                 title="API is not connected. Running in Demo Mode with local study bank."
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                 Demo Mode
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full bg-[#004741]/10 dark:bg-[#004741]/40 text-[#004741] dark:text-[#6ee7b7] text-[11px] font-bold flex items-center gap-1.5 shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#004741] dark:bg-[#6ee7b7]" />
+              <span className="text-[11px] font-semibold text-[#004741] dark:text-[#38BDF8] flex items-center gap-1.5 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#004741] dark:bg-[#38BDF8]" />
                 Gemini 3.8 Flash
               </span>
             )}
           </div>
-          <p className="text-[11px] sm:text-xs text-black/60 dark:text-[#F0EDE4]/60 truncate">
+          <p className="text-[11px] sm:text-xs text-black/60 dark:text-[#94A3B8] truncate">
             {t.askSub}
           </p>
         </div>
@@ -344,7 +340,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
               soundManager.play('button_click');
               setSelectedSubject(e.target.value);
             }}
-            className="text-xs font-semibold py-1.5 px-2.5 rounded-xl border border-black/15 dark:border-white/15 bg-white/80 dark:bg-black/40 text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-1 focus:ring-[#004741] max-w-[200px]"
+            className="text-xs font-semibold py-1.5 px-2.5 rounded-xl border border-black/15 dark:border-[#263449] bg-white/80 dark:bg-[#111827] text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-1 focus:ring-[#004741] max-w-[200px]"
           >
             <option value="">{language === 'hi' ? 'सभी विषय' : 'All Subjects'}</option>
             {subjects.map((s) => (
@@ -358,7 +354,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
           <button
             onClick={handleClearChat}
             title={t.clearChat}
-            className="p-1.5 sm:p-2 rounded-xl border border-black/15 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/5 text-black dark:text-[#F0EDE4] active:scale-95 transition-all shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl border border-black/15 dark:border-[#263449] hover:bg-black/5 dark:hover:bg-[#1E293B] text-black dark:text-[#F1F5F9] active:scale-95 transition-all shrink-0"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -367,7 +363,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
 
       {/* Demo Mode Notice Banner if API is not connected */}
       {isGeminiConnected === false && (
-        <div className="mt-2.5 p-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200">
+        <div className="mt-2 p-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-200 shrink-0">
           <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
           <span>
             {language === 'hi'
@@ -378,149 +374,170 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
       )}
 
       {/* Messages list */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-        {messages.map((msg) => {
-          const isUser = msg.role === 'user';
-          const isSaved = savedMessageIds.has(msg.id);
-          const isCopied = copiedId === msg.id;
-          const isSpeaking = speakingMsgId === msg.id;
-          const isDemoMsg = msg.isFallback === true || (isGeminiConnected === false && !isUser);
+      <div className="flex-1 overflow-y-auto py-3 space-y-3.5 pr-1 min-h-0 flex flex-col">
+        {messages.length === 1 && messages[0].id.startsWith('welcome') ? (
+          <div className="my-auto py-6 sm:py-8 flex flex-col items-center justify-center text-center max-w-lg mx-auto px-4 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#004741] text-[#F0EDE4] flex items-center justify-center shadow-xs">
+              <Bot className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-base sm:text-lg font-bold text-black dark:text-[#F1F5F9] tracking-tight">
+                {language === 'hi' ? 'StudyMate AI अध्ययन सहायक' : 'StudyMate AI Study Assistant'}
+              </h2>
+              <p className="text-xs sm:text-sm text-black/65 dark:text-[#94A3B8] leading-relaxed">
+                {messages[0].text}
+              </p>
+            </div>
+            <p className="text-[11px] font-semibold text-[#004741] dark:text-[#38BDF8] pt-1">
+              {language === 'hi'
+                ? 'नीचे दिए गए सुझावों में से चुनें या अपना अध्ययन प्रश्न टाइप करें:'
+                : 'Select a suggested topic below or type your study question:'}
+            </p>
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const isUser = msg.role === 'user';
+            const isSaved = savedMessageIds.has(msg.id);
+            const isCopied = copiedId === msg.id;
+            const isSpeaking = speakingMsgId === msg.id;
+            const isDemoMsg = msg.isFallback === true || (isGeminiConnected === false && !isUser);
 
-          return (
-            <div
-              key={msg.id}
-              className={`flex items-start gap-2.5 sm:gap-3 ${
-                isUser ? 'justify-end' : 'justify-start'
-              }`}
-            >
-              {!isUser && (
-                <div className="w-8 h-8 rounded-xl bg-[#004741] text-[#F0EDE4] flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                  <Bot className="w-4 h-4" />
-                </div>
-              )}
-
+            return (
               <div
-                className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-4 text-sm shadow-sm relative ${
-                  isUser
-                    ? 'bg-[#004741] text-[#F0EDE4] rounded-tr-none'
-                    : 'bg-white/95 dark:bg-[#0c1412] text-black dark:text-[#F0EDE4] border border-black/10 dark:border-white/10 rounded-tl-none'
+                key={msg.id}
+                className={`flex items-start gap-2.5 sm:gap-3 ${
+                  isUser ? 'justify-end' : 'justify-start'
                 }`}
               >
-                {/* Header tags: Subject & Model Origin */}
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5">
-                    {msg.subject && (
-                      <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                          isUser
-                            ? 'bg-black/20 text-[#F0EDE4]'
-                            : 'bg-[#004741]/10 dark:bg-[#004741]/30 text-[#004741] dark:text-[#6ee7b7]'
-                        }`}
-                      >
-                        {msg.subject}
-                      </span>
-                    )}
-                  </div>
-
-                  {!isUser && (
-                    <div>
-                      {isDemoMsg ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/25 inline-flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-amber-500" />
-                          Demo Mode
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-semibold text-[#004741] dark:text-[#6ee7b7] px-1.5 py-0.5 rounded bg-[#004741]/5 dark:bg-[#004741]/20">
-                          Gemini 3.8 Flash
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Message Body with KaTeX Math, Tables, and Markdown */}
-                {isUser ? (
-                  <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                ) : (
-                  <div className="study-ai-answer">
-                    <MarkdownRenderer content={msg.text} theme={theme} />
+                {!isUser && (
+                  <div className="w-8 h-8 rounded-xl bg-[#004741] text-[#F0EDE4] flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                    <Bot className="w-4 h-4" />
                   </div>
                 )}
 
-                {/* Message Footer: Timestamp & Action Bar */}
                 <div
-                  className={`mt-3 pt-2.5 flex items-center justify-between gap-2 border-t ${
+                  className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-4 text-sm shadow-xs relative ${
                     isUser
-                      ? 'border-white/15 text-[#F0EDE4]/70'
-                      : 'border-black/5 dark:border-white/5 text-black/50 dark:text-[#F0EDE4]/50'
+                      ? 'bg-[#004741] text-[#F0EDE4] rounded-tr-none'
+                      : 'bg-white/95 dark:bg-[#172033] text-black dark:text-[#F1F5F9] border border-black/10 dark:border-[#263449] rounded-tl-none'
                   }`}
                 >
-                  <span className="text-[11px] font-mono">{msg.timestamp}</span>
+                  {/* Header tags: Subject & Model Origin */}
+                  <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      {msg.subject && (
+                        <span
+                          className={`text-[10px] font-bold uppercase tracking-wider ${
+                            isUser
+                              ? 'text-[#F0EDE4]/80'
+                              : 'text-[#004741] dark:text-[#38BDF8]'
+                          }`}
+                        >
+                          {msg.subject}
+                        </span>
+                      )}
+                    </div>
 
-                  {!isUser && (
-                    <div className="flex items-center gap-1">
-                      {/* Read Aloud / Stop */}
-                      <button
-                        onClick={() => handleToggleSpeech(msg.id, msg.text)}
-                        title={isSpeaking ? t.stopReading : t.readAloud}
-                        className={`p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors ${
-                          isSpeaking ? 'text-[#004741] dark:text-[#6ee7b7] font-bold' : ''
-                        }`}
-                      >
-                        {isSpeaking ? (
-                          <VolumeX className="w-3.5 h-3.5 text-rose-500" />
+                    {!isUser && (
+                      <div className="text-[10px] font-medium">
+                        {isDemoMsg ? (
+                          <span className="text-amber-800 dark:text-amber-300 inline-flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-amber-500" />
+                            Demo Mode
+                          </span>
                         ) : (
-                          <Volume2 className="w-3.5 h-3.5" />
+                          <span className="text-black/50 dark:text-[#94A3B8]">
+                            Gemini 3.8 Flash
+                          </span>
                         )}
-                      </button>
+                      </div>
+                    )}
+                  </div>
 
-                      {/* Copy */}
-                      <button
-                        onClick={() => handleCopy(msg.id, msg.text)}
-                        title={isCopied ? t.copied : t.copyAnswer}
-                        className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                      >
-                        {isCopied ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-
-                      {/* Save to Bookmarks */}
-                      <button
-                        onClick={() => handleSave(msg)}
-                        title={isSaved ? t.saved : t.saveAnswer}
-                        className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                      >
-                        {isSaved ? (
-                          <BookmarkCheck className="w-3.5 h-3.5 text-[#004741] dark:text-[#6ee7b7]" />
-                        ) : (
-                          <Bookmark className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-
-                      {/* Share */}
-                      <button
-                        onClick={() => handleShare(msg.text)}
-                        title="Share Answer"
-                        className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                      >
-                        <Share2 className="w-3.5 h-3.5" />
-                      </button>
+                  {/* Message Body with KaTeX Math, Tables, and Markdown */}
+                  {isUser ? (
+                    <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                  ) : (
+                    <div className="study-ai-answer">
+                      <MarkdownRenderer content={msg.text} theme={theme} />
                     </div>
                   )}
-                </div>
-              </div>
 
-              {isUser && (
-                <div className="w-8 h-8 rounded-xl bg-black text-[#F0EDE4] flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                  <User className="w-4 h-4" />
+                  {/* Message Footer: Timestamp & Action Bar */}
+                  <div
+                    className={`mt-3 pt-2 flex items-center justify-between gap-2 border-t ${
+                      isUser
+                        ? 'border-white/15 text-[#F0EDE4]/70'
+                        : 'border-black/5 dark:border-[#263449]/60 text-black/50 dark:text-[#94A3B8]'
+                    }`}
+                  >
+                    <span className="text-[11px] font-mono">{msg.timestamp}</span>
+
+                    {!isUser && (
+                      <div className="flex items-center gap-1">
+                        {/* Read Aloud / Stop */}
+                        <button
+                          onClick={() => handleToggleSpeech(msg.id, msg.text)}
+                          title={isSpeaking ? t.stopReading : t.readAloud}
+                          className={`p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[#1E293B] transition-colors ${
+                            isSpeaking ? 'text-[#004741] dark:text-[#38BDF8] font-bold' : ''
+                          }`}
+                        >
+                          {isSpeaking ? (
+                            <VolumeX className="w-3.5 h-3.5 text-rose-500" />
+                          ) : (
+                            <Volume2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+
+                        {/* Copy */}
+                        <button
+                          onClick={() => handleCopy(msg.id, msg.text)}
+                          title={isCopied ? t.copied : t.copyAnswer}
+                          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[#1E293B] transition-colors"
+                        >
+                          {isCopied ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+
+                        {/* Save to Bookmarks */}
+                        <button
+                          onClick={() => handleSave(msg)}
+                          title={isSaved ? t.saved : t.saveAnswer}
+                          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[#1E293B] transition-colors"
+                        >
+                          {isSaved ? (
+                            <BookmarkCheck className="w-3.5 h-3.5 text-[#004741] dark:text-[#38BDF8]" />
+                          ) : (
+                            <Bookmark className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+
+                        {/* Share */}
+                        <button
+                          onClick={() => handleShare(msg.text)}
+                          title="Share Answer"
+                          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[#1E293B] transition-colors"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
+
+                {isUser && (
+                  <div className="w-8 h-8 rounded-xl bg-black text-[#F0EDE4] flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                    <User className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
 
         {/* Typing Loading Indicator */}
         {isLoading && (
@@ -528,11 +545,11 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
             <div className="w-8 h-8 rounded-xl bg-[#004741] text-[#F0EDE4] flex items-center justify-center shrink-0 animate-pulse">
               <Bot className="w-4 h-4" />
             </div>
-            <div className="p-4 rounded-2xl rounded-tl-none bg-white/95 dark:bg-[#0c1412] border border-black/10 dark:border-white/10 shadow-sm flex items-center gap-2">
+            <div className="p-3.5 rounded-2xl rounded-tl-none bg-white/95 dark:bg-[#172033] border border-black/10 dark:border-[#263449] shadow-xs flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#004741] animate-bounce" />
               <span className="w-2 h-2 rounded-full bg-[#004741] animate-bounce [animation-delay:0.2s]" />
               <span className="w-2 h-2 rounded-full bg-[#004741] animate-bounce [animation-delay:0.4s]" />
-              <span className="text-xs font-semibold text-black/60 dark:text-[#F0EDE4]/60 ml-2">
+              <span className="text-xs font-semibold text-black/60 dark:text-[#94A3B8] ml-2">
                 {language === 'hi' ? 'StudyMate AI उत्तर तैयार कर रहा है...' : 'StudyMate AI is drafting structured answer...'}
               </span>
             </div>
@@ -560,7 +577,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
                 soundManager.play('button_click');
                 handleSendMessage(prompt);
               }}
-              className="shrink-0 px-2.5 py-1 rounded-full bg-white/80 dark:bg-black/40 border border-black/10 dark:border-white/10 hover:border-[#004741] text-black dark:text-[#F0EDE4] text-xs font-medium active:scale-95 transition-all"
+              className="shrink-0 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-[#111827] border border-black/10 dark:border-[#263449] hover:border-[#004741] text-black dark:text-[#F1F5F9] text-xs font-medium active:scale-95 transition-all"
             >
               {prompt}
             </button>
@@ -581,7 +598,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
             onChange={(e) => setInputText(e.target.value)}
             placeholder={t.askInputPlaceholder}
             disabled={isLoading}
-            className="w-full pl-3.5 sm:pl-4 pr-24 sm:pr-28 py-3 sm:py-3.5 rounded-2xl bg-white dark:bg-[#0c1412] text-black dark:text-[#F0EDE4] border border-black/15 dark:border-white/15 focus:outline-none focus:ring-2 focus:ring-[#004741] shadow-sm text-xs sm:text-sm"
+            className="w-full pl-3.5 sm:pl-4 pr-24 sm:pr-28 py-2.5 sm:py-3 rounded-xl bg-white dark:bg-[#172033] text-black dark:text-[#F1F5F9] border border-black/15 dark:border-[#263449] focus:outline-none focus:ring-2 focus:ring-[#004741] shadow-xs text-xs sm:text-sm"
           />
 
           <div className="absolute right-1.5 sm:right-2 flex items-center gap-1 sm:gap-1.5">
@@ -590,10 +607,10 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
               type="button"
               onClick={handleVoiceInput}
               title={isListening ? t.listening : t.voiceInput}
-              className={`p-1.5 sm:p-2 rounded-xl transition-all ${
+              className={`p-1.5 sm:p-2 rounded-lg transition-all ${
                 isListening
                   ? 'bg-rose-600 text-white animate-pulse'
-                  : 'bg-black/5 dark:bg-white/5 text-black dark:text-[#F0EDE4] hover:bg-black/10'
+                  : 'bg-black/5 dark:bg-white/5 text-black dark:text-[#F1F5F9] hover:bg-black/10'
               }`}
             >
               {isListening ? <MicOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
@@ -606,7 +623,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
                 onClick={() => handleRegenerate()}
                 title={t.regenerate}
                 disabled={isLoading}
-                className="p-1.5 sm:p-2 rounded-xl bg-black/5 dark:bg-white/5 text-black dark:text-[#F0EDE4] hover:bg-black/10 transition-all disabled:opacity-40"
+                className="p-1.5 sm:p-2 rounded-lg bg-black/5 dark:bg-white/5 text-black dark:text-[#F1F5F9] hover:bg-black/10 transition-all disabled:opacity-40"
               >
                 <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
@@ -617,7 +634,7 @@ export const AskAIView: React.FC<AskAIViewProps> = ({
               type="submit"
               disabled={!inputText.trim() || isLoading}
               title="Send Question"
-              className="p-1.5 sm:p-2 rounded-xl bg-[#004741] text-[#F0EDE4] hover:bg-black transition-all disabled:opacity-40 disabled:hover:bg-[#004741] active:scale-95"
+              className="p-1.5 sm:p-2 rounded-lg bg-[#004741] text-[#F0EDE4] hover:bg-black transition-all disabled:opacity-40 disabled:hover:bg-[#004741] active:scale-95"
             >
               <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>

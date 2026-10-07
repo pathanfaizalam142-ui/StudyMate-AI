@@ -223,7 +223,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
           <div className="w-7 h-7 rounded-lg bg-[#004741] text-[#F0EDE4] flex items-center justify-center font-bold text-xs">
             <BookOpen className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold font-display tracking-tight text-black dark:text-[#F0EDE4]">
+          <span className="text-xs font-bold font-display tracking-tight text-black dark:text-[#F1F5F9]">
             StudyMate AI
           </span>
         </div>
@@ -236,7 +236,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 onSoundToggle();
               }}
               title={soundEnabled ? 'Sound Enabled' : 'Sound Muted'}
-              className="p-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-[#004741] text-black dark:text-[#F0EDE4] transition-all"
+              className="p-1.5 rounded-lg border border-black/10 dark:border-[#263449] hover:border-[#004741] text-black dark:text-[#F1F5F9] transition-all"
             >
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
             </button>
@@ -249,9 +249,9 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 onLanguageToggle();
               }}
               title="Change Language"
-              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-black/10 dark:border-white/10 hover:border-[#004741] text-[11px] font-bold text-black dark:text-[#F0EDE4] transition-all"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-black/10 dark:border-[#263449] hover:border-[#004741] text-[11px] font-bold text-black dark:text-[#F1F5F9] transition-all"
             >
-              <Languages className="w-3.5 h-3.5 text-[#004741] dark:text-[#6ee7b7]" />
+              <Languages className="w-3.5 h-3.5 text-[#004741] dark:text-[#38BDF8]" />
               <span>{language === 'en' ? 'HI' : 'EN'}</span>
             </button>
           )}
@@ -263,7 +263,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 onThemeToggle();
               }}
               title="Toggle Dark/Light Mode"
-              className="p-1.5 rounded-lg border border-black/10 dark:border-white/10 hover:border-[#004741] text-black dark:text-[#F0EDE4] transition-all"
+              className="p-1.5 rounded-lg border border-black/10 dark:border-[#263449] hover:border-[#004741] text-black dark:text-[#F1F5F9] transition-all"
             >
               {theme === 'dark' ? (
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
@@ -283,7 +283,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
           </div>
 
           <div className="flex items-center justify-center gap-1.5">
-            <h1 className="font-display font-black text-2xl sm:text-3xl tracking-tight text-black dark:text-[#F0EDE4]">
+            <h1 className="font-display font-black text-2xl sm:text-3xl tracking-tight text-black dark:text-[#F1F5F9]">
               StudyMate
             </h1>
             <span className="px-1.5 py-0.5 rounded-md bg-[#004741] text-[#F0EDE4] text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5">
@@ -292,7 +292,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
             </span>
           </div>
 
-          <p className="text-xs sm:text-sm text-black/60 dark:text-[#F0EDE4]/60 max-w-xs mx-auto">
+          <p className="text-xs sm:text-sm text-black/60 dark:text-[#94A3B8] max-w-xs mx-auto">
             {language === 'hi'
               ? 'गुजरात टेक्नोलॉजिकल यूनिवर्सिटी (GTU) BCA अध्ययन पोर्टल'
               : 'Gujarat Technological University (GTU) BCA Academic Portal'}
@@ -300,7 +300,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
         </div>
 
         {/* Auth Mode Tabs (Login / Register) */}
-        <div className="p-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center gap-1">
+        <div className="p-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-[#263449] flex items-center gap-1">
           <button
             type="button"
             onClick={() => {
@@ -312,7 +312,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
             className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
               mode === 'login'
                 ? 'bg-[#004741] text-[#F0EDE4] shadow-sm'
-                : 'text-black/70 dark:text-[#F0EDE4]/70 hover:text-black dark:hover:text-[#F0EDE4]'
+                : 'text-black/70 dark:text-[#94A3B8] hover:text-black dark:hover:text-[#F1F5F9]'
             }`}
           >
             {language === 'hi' ? 'लॉग इन' : 'Sign In'}
@@ -328,7 +328,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
             className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
               mode === 'register'
                 ? 'bg-[#004741] text-[#F0EDE4] shadow-sm'
-                : 'text-black/70 dark:text-[#F0EDE4]/70 hover:text-black dark:hover:text-[#F0EDE4]'
+                : 'text-black/70 dark:text-[#94A3B8] hover:text-black dark:hover:text-[#F1F5F9]'
             }`}
           >
             {language === 'hi' ? 'खाता बनाएं' : 'Create Account'}
@@ -336,7 +336,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
         </div>
 
         {/* Card Box */}
-        <div className="bg-white dark:bg-[#0c120f] border border-black/10 dark:border-white/10 rounded-3xl p-5 sm:p-7 shadow-xl space-y-5">
+        <div className="bg-white dark:bg-[#172033] border border-black/10 dark:border-[#263449] rounded-3xl p-5 sm:p-7 shadow-xl space-y-5">
           {/* Success Banner */}
           {successBanner && (
             <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
@@ -358,11 +358,11 @@ export const AuthView: React.FC<AuthViewProps> = ({
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               {/* Email */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                   {language === 'hi' ? 'ईमेल पता' : 'Email Address'}
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40" />
+                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70" />
                   <input
                     type="email"
                     value={email}
@@ -371,9 +371,9 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                     }}
                     placeholder="faizan@gtu.ac.in"
-                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border ${
-                      errors.email ? 'border-red-500' : 'border-black/15 dark:border-white/15'
-                    } text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border ${
+                      errors.email ? 'border-red-500' : 'border-black/15 dark:border-[#263449]'
+                    } text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
                   />
                 </div>
                 {errors.email && <p className="text-[10px] text-red-600">{errors.email}</p>}
@@ -382,7 +382,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
               {/* Password */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                     {language === 'hi' ? 'पासवर्ड' : 'Password'}
                   </label>
                   <button
@@ -391,13 +391,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       soundManager.play('button_click');
                       setIsForgotOpen(true);
                     }}
-                    className="text-[11px] font-semibold text-[#004741] dark:text-[#6ee7b7] hover:underline"
+                    className="text-[11px] font-semibold text-[#004741] dark:text-[#38BDF8] hover:underline"
                   >
                     {language === 'hi' ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}
                   </button>
                 </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40" />
+                  <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -406,14 +406,14 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
                     }}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-10 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border ${
-                      errors.password ? 'border-red-500' : 'border-black/15 dark:border-white/15'
-                    } text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
+                    className={`w-full pl-9 pr-10 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border ${
+                      errors.password ? 'border-red-500' : 'border-black/15 dark:border-[#263449]'
+                    } text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40 hover:text-black dark:hover:text-[#F0EDE4]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70 hover:text-black dark:hover:text-[#F1F5F9]"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -431,7 +431,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded text-[#004741] focus:ring-[#004741] cursor-pointer"
                   />
-                  <span className="text-black/70 dark:text-[#F0EDE4]/70">
+                  <span className="text-black/70 dark:text-[#94A3B8]">
                     {language === 'hi' ? 'मुझे याद रखें' : 'Remember me'}
                   </span>
                 </label>
@@ -457,12 +457,12 @@ export const AuthView: React.FC<AuthViewProps> = ({
               </button>
 
               {/* Quick Demo Access Button */}
-              <div className="pt-2 border-t border-black/10 dark:border-white/10">
+              <div className="pt-2 border-t border-black/10 dark:border-[#263449]">
                 <button
                   type="button"
                   onClick={handleDemoStudentLogin}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-black/15 dark:border-white/15 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-bold text-black dark:text-[#F0EDE4] transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-black/15 dark:border-[#263449] bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-[#1E293B] text-xs font-bold text-black dark:text-[#F1F5F9] transition-all"
                 >
                   <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                   <span>
@@ -478,11 +478,11 @@ export const AuthView: React.FC<AuthViewProps> = ({
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               {/* Full Name */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                   {language === 'hi' ? 'पूरा नाम' : 'Full Name'}
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40" />
+                  <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70" />
                   <input
                     type="text"
                     value={name}
@@ -491,9 +491,9 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
                     }}
                     placeholder="Faiz Alam"
-                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border ${
-                      errors.name ? 'border-red-500' : 'border-black/15 dark:border-white/15'
-                    } text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border ${
+                      errors.name ? 'border-red-500' : 'border-black/15 dark:border-[#263449]'
+                    } text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
                   />
                 </div>
                 {errors.name && <p className="text-[10px] text-red-600">{errors.name}</p>}
@@ -501,11 +501,11 @@ export const AuthView: React.FC<AuthViewProps> = ({
 
               {/* Email */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                   {language === 'hi' ? 'ईमेल पता' : 'Email Address'}
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40" />
+                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70" />
                   <input
                     type="email"
                     value={email}
@@ -514,9 +514,9 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                     }}
                     placeholder="student@gtu.ac.in"
-                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border ${
-                      errors.email ? 'border-red-500' : 'border-black/15 dark:border-white/15'
-                    } text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border ${
+                      errors.email ? 'border-red-500' : 'border-black/15 dark:border-[#263449]'
+                    } text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
                   />
                 </div>
                 {errors.email && <p className="text-[10px] text-red-600">{errors.email}</p>}
@@ -525,13 +525,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
               {/* University & Semester Selectors */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                     {language === 'hi' ? 'सेमेस्टर' : 'Semester'}
                   </label>
                   <select
                     value={semester}
                     onChange={(e) => setSemester(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border border-black/15 dark:border-white/15 text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border border-black/15 dark:border-[#263449] text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]"
                   >
                     {[1, 2, 3, 4, 5, 6].map((s) => (
                       <option key={s} value={s}>
@@ -542,25 +542,25 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                     {language === 'hi' ? 'पाठ्यक्रम' : 'Course'}
                   </label>
                   <input
                     type="text"
                     disabled
                     value="GTU BCA"
-                    className="w-full px-3 py-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs font-bold text-[#004741] dark:text-[#6ee7b7]"
+                    className="w-full px-3 py-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-[#263449] text-xs font-bold text-[#004741] dark:text-[#38BDF8]"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                   {language === 'hi' ? 'पासवर्ड (कम से कम 6 अक्षर)' : 'Password (Min 6 chars)'}
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40" />
+                  <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -569,14 +569,14 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
                     }}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-10 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border ${
-                      errors.password ? 'border-red-500' : 'border-black/15 dark:border-white/15'
-                    } text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
+                    className={`w-full pl-9 pr-10 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border ${
+                      errors.password ? 'border-red-500' : 'border-black/15 dark:border-[#263449]'
+                    } text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40 hover:text-black dark:hover:text-[#F0EDE4]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70 hover:text-black dark:hover:text-[#F1F5F9]"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -586,11 +586,11 @@ export const AuthView: React.FC<AuthViewProps> = ({
 
               {/* Confirm Password */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                   {language === 'hi' ? 'पासवर्ड की पुष्टि करें' : 'Confirm Password'}
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40" />
+                  <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
@@ -600,14 +600,14 @@ export const AuthView: React.FC<AuthViewProps> = ({
                         setErrors((prev) => ({ ...prev, confirmPassword: '' }));
                     }}
                     placeholder="••••••••"
-                    className={`w-full pl-9 pr-10 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#070b09] border ${
-                      errors.confirmPassword ? 'border-red-500' : 'border-black/15 dark:border-white/15'
-                    } text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
+                    className={`w-full pl-9 pr-10 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border ${
+                      errors.confirmPassword ? 'border-red-500' : 'border-black/15 dark:border-[#263449]'
+                    } text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40 hover:text-black dark:hover:text-[#F0EDE4]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70 hover:text-black dark:hover:text-[#F1F5F9]"
                   >
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -639,7 +639,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
           )}
 
           {/* Switch Prompt */}
-          <div className="text-center text-xs text-black/60 dark:text-[#F0EDE4]/60 pt-2 border-t border-black/10 dark:border-white/10">
+          <div className="text-center text-xs text-black/60 dark:text-[#94A3B8] pt-2 border-t border-black/10 dark:border-[#263449]">
             {mode === 'login' ? (
               <p>
                 {language === 'hi' ? 'खाता नहीं है?' : "Don't have an account?"}{' '}
@@ -651,7 +651,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                     setErrorMessage(null);
                     setErrors({});
                   }}
-                  className="font-bold text-[#004741] dark:text-[#6ee7b7] hover:underline"
+                  className="font-bold text-[#004741] dark:text-[#38BDF8] hover:underline"
                 >
                   {language === 'hi' ? 'रजिस्टर करें' : 'Create Account'}
                 </button>
@@ -667,7 +667,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                     setErrorMessage(null);
                     setErrors({});
                   }}
-                  className="font-bold text-[#004741] dark:text-[#6ee7b7] hover:underline"
+                  className="font-bold text-[#004741] dark:text-[#38BDF8] hover:underline"
                 >
                   {language === 'hi' ? 'लॉग इन करें' : 'Sign In'}
                 </button>
@@ -677,8 +677,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
         </div>
 
         {/* Security / Architecture Notice */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-black/50 dark:text-[#F0EDE4]/50">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#004741] dark:text-[#6ee7b7]" />
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-black/50 dark:text-[#94A3B8]">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#004741] dark:text-[#38BDF8]" />
           <span>GTU Academic Security • Firebase Authentication Compatible</span>
         </div>
 
@@ -686,7 +686,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
           <div className="text-center">
             <button
               onClick={onCancel}
-              className="text-xs text-black/60 dark:text-[#F0EDE4]/60 hover:underline"
+              className="text-xs text-black/60 dark:text-[#94A3B8] hover:underline"
             >
               {language === 'hi' ? 'डैशबोर्ड पर लौटें' : 'Return to Dashboard'}
             </button>

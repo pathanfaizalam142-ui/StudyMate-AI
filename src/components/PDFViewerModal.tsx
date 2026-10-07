@@ -111,10 +111,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col overflow-hidden animate-fade-in text-black dark:text-[#F0EDE4]"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col overflow-hidden animate-fade-in text-black dark:text-[#F1F5F9]"
     >
       {/* Top Header & Toolbar */}
-      <header className="shrink-0 bg-[#F0EDE4] dark:bg-[#070c0a] border-b border-black/10 dark:border-white/10 px-3 sm:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2 shadow-sm z-10">
+      <header className="shrink-0 bg-[#F0EDE4] dark:bg-[#0B1120] border-b border-black/10 dark:border-[#263449] px-3 sm:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2 shadow-sm z-10">
         {/* Left: Paper info & Back Button */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
@@ -122,10 +122,10 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               soundManager.play('button_click');
               onClose();
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#0c120f] hover:border-[#004741] text-xs font-bold transition-all shrink-0 active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-black/15 dark:border-[#263449] bg-white dark:bg-[#172033] hover:border-[#004741] text-xs font-bold transition-all shrink-0 active:scale-95"
             title="Back to Papers"
           >
-            <ChevronLeft className="w-4 h-4 text-[#004741] dark:text-[#6ee7b7]" />
+            <ChevronLeft className="w-4 h-4 text-[#004741] dark:text-[#38BDF8]" />
             <span className="hidden sm:inline">{language === 'hi' ? 'वापस' : 'Back'}</span>
           </button>
 
@@ -138,7 +138,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                 {paper.subject}
               </h2>
             </div>
-            <p className="text-[10px] sm:text-[11px] text-black/60 dark:text-[#F0EDE4]/60 truncate">
+            <p className="text-[10px] sm:text-[11px] text-black/60 dark:text-[#94A3B8] truncate">
               GTU BCA • Sem {paper.semester} • {paper.exam} {paper.year} Examination
             </p>
           </div>
@@ -150,7 +150,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           <button
             onClick={handleZoomOut}
             disabled={zoomLevel <= 70}
-            className="p-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0c120f] disabled:opacity-40 hover:border-[#004741] transition-all"
+            className="p-1.5 rounded-lg border border-black/10 dark:border-[#263449] bg-white dark:bg-[#172033] disabled:opacity-40 hover:border-[#004741] transition-all"
             title="Zoom Out"
           >
             <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -159,7 +159,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           {/* Zoom percentage & reset */}
           <button
             onClick={handleResetZoom}
-            className="px-2 py-1 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0c120f] text-[10px] sm:text-xs font-mono font-semibold hover:border-[#004741] transition-all"
+            className="px-2 py-1 rounded-lg border border-black/10 dark:border-[#263449] bg-white dark:bg-[#172033] text-[10px] sm:text-xs font-mono font-semibold hover:border-[#004741] transition-all"
             title="Reset Zoom (100%)"
           >
             {zoomLevel}%
@@ -169,7 +169,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           <button
             onClick={handleZoomIn}
             disabled={zoomLevel >= 180}
-            className="p-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0c120f] disabled:opacity-40 hover:border-[#004741] transition-all"
+            className="p-1.5 rounded-lg border border-black/10 dark:border-[#263449] bg-white dark:bg-[#172033] disabled:opacity-40 hover:border-[#004741] transition-all"
             title="Zoom In"
           >
             <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -185,7 +185,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                 setCurrentPage((p) => Math.max(p - 1, 1));
               }}
               disabled={currentPage <= 1}
-              className="p-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0c120f] disabled:opacity-40"
+              className="p-1.5 rounded-lg border border-black/10 dark:border-[#263449] bg-white dark:bg-[#172033] disabled:opacity-40"
               title="Previous Page"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -199,7 +199,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
                 setCurrentPage((p) => Math.min(p + 1, totalPages));
               }}
               disabled={currentPage >= totalPages}
-              className="p-1.5 rounded-lg border border-black/10 dark:border-white/10 bg-white dark:bg-[#0c120f] disabled:opacity-40"
+              className="p-1.5 rounded-lg border border-black/10 dark:border-[#263449] bg-white dark:bg-[#172033] disabled:opacity-40"
               title="Next Page"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -212,17 +212,17 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           {/* Print Button */}
           <button
             onClick={handlePrint}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#0c120f] hover:border-[#004741] text-xs font-semibold active:scale-95 transition-all"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-black/15 dark:border-[#263449] bg-white dark:bg-[#172033] hover:border-[#004741] text-xs font-semibold active:scale-95 transition-all"
             title="Print Paper"
           >
-            <Printer className="w-3.5 h-3.5 text-[#004741] dark:text-[#6ee7b7]" />
+            <Printer className="w-3.5 h-3.5 text-[#004741] dark:text-[#38BDF8]" />
             <span>{language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           {/* Fullscreen Button */}
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#0c120f] hover:border-[#004741] text-xs font-semibold active:scale-95 transition-all"
+            className="p-1.5 rounded-xl border border-black/15 dark:border-[#263449] bg-white dark:bg-[#172033] hover:border-[#004741] text-xs font-semibold active:scale-95 transition-all"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? <Minimize className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
@@ -263,7 +263,7 @@ export const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               soundManager.play('button_click');
               onClose();
             }}
-            className="p-1.5 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-[#0c120f] hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all ml-1"
+            className="p-1.5 rounded-xl border border-black/15 dark:border-[#263449] bg-white dark:bg-[#172033] hover:bg-black/5 dark:hover:bg-[#1E293B] active:scale-95 transition-all ml-1"
             title="Close"
           >
             <X className="w-4 h-4" />

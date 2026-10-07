@@ -39,6 +39,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
   const [difficulty, setDifficulty] = useState('Medium');
   const [targetTopics, setTargetTopics] = useState('Deadlocks, OSI Layers, Binary Trees, SQL Normalization');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const completedCount = planData.todayTasks.filter((t) => t.completed).length;
   const totalCount = planData.todayTasks.length;
@@ -58,6 +59,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
   const handleGeneratePlan = async () => {
     soundManager.play('button_click');
     setIsLoading(true);
+    setErrorMsg(null);
 
     try {
       const res = await api.generateStudyPlan({
@@ -74,25 +76,35 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
         soundManager.play('ai_response_ready');
       }
     } catch (err: any) {
-      alert(`Could not generate study plan: ${err.message}`);
+      setErrorMsg(err?.message || 'Could not generate study plan.');
+      soundManager.play('error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div id="study-plan-view" className="space-y-5 sm:space-y-6 max-w-4xl mx-auto pb-20 md:pb-8 w-full min-w-0">
+    <div id="study-plan-view" className="space-y-5 sm:space-y-6 max-w-4xl mx-auto w-full min-w-0">
+      {errorMsg && (
+        <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center justify-between">
+          <span>{errorMsg}</span>
+          <button type="button" onClick={() => setErrorMsg(null)} className="underline text-[11px]">
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="border-b border-black/10 dark:border-white/10 pb-3 sm:pb-4">
+      <div className="border-b border-black/10 dark:border-[#263449] pb-3 sm:pb-4">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-[#004741] text-[#F0EDE4] shrink-0">
             <CalendarCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-2xl font-display font-black text-black dark:text-[#F0EDE4] tracking-tight leading-tight">
+            <h1 className="text-lg sm:text-2xl font-display font-black text-black dark:text-[#F1F5F9] tracking-tight leading-tight">
               {t.planHeader}
             </h1>
-            <p className="text-xs sm:text-sm text-black/70 dark:text-[#F0EDE4]/70">
+            <p className="text-xs sm:text-sm text-black/70 dark:text-[#94A3B8]">
               {t.planSub}
             </p>
           </div>
@@ -135,34 +147,34 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
       </div>
 
       {/* Setup Inputs Accordion / Card */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-white/90 dark:bg-[#0c1412] border border-black/10 dark:border-white/10 shadow-sm space-y-3.5 sm:space-y-4">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white/90 dark:bg-[#172033] border border-black/10 dark:border-[#263449] shadow-sm space-y-3.5 sm:space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-black dark:text-[#F0EDE4] uppercase tracking-wider">
+          <span className="text-xs font-bold text-black dark:text-[#F1F5F9] uppercase tracking-wider">
             Plan Preferences
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-black/70 dark:text-[#F0EDE4]/70 mb-1">
+            <label className="block text-xs font-semibold text-black/70 dark:text-[#94A3B8] mb-1">
               {t.targetDate}
             </label>
             <input
               type="date"
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
-              className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-white/15 bg-[#F0EDE4]/40 dark:bg-black/30 text-xs font-semibold focus:ring-1 focus:ring-[#004741]"
+              className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-[#263449] bg-[#F0EDE4]/40 dark:bg-[#172033] text-xs font-semibold focus:ring-1 focus:ring-[#004741]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-black/70 dark:text-[#F0EDE4]/70 mb-1">
+            <label className="block text-xs font-semibold text-black/70 dark:text-[#94A3B8] mb-1">
               {t.dailyHours}
             </label>
             <select
               value={dailyHours}
               onChange={(e) => setDailyHours(Number(e.target.value))}
-              className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-white/15 bg-[#F0EDE4]/40 dark:bg-black/30 text-xs font-semibold focus:ring-1 focus:ring-[#004741]"
+              className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-[#263449] bg-[#F0EDE4]/40 dark:bg-[#172033] text-xs font-semibold focus:ring-1 focus:ring-[#004741]"
             >
               {[1, 2, 3, 4, 5, 6].map((h) => (
                 <option key={h} value={h}>
@@ -173,13 +185,13 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-black/70 dark:text-[#F0EDE4]/70 mb-1">
+            <label className="block text-xs font-semibold text-black/70 dark:text-[#94A3B8] mb-1">
               {t.difficulty}
             </label>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-white/15 bg-[#F0EDE4]/40 dark:bg-black/30 text-xs font-semibold focus:ring-1 focus:ring-[#004741]"
+              className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-[#263449] bg-[#F0EDE4]/40 dark:bg-[#172033] text-xs font-semibold focus:ring-1 focus:ring-[#004741]"
             >
               <option value="Easy">Easy (Foundation Focus)</option>
               <option value="Medium">Medium (Balanced)</option>
@@ -189,7 +201,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-black/70 dark:text-[#F0EDE4]/70 mb-1">
+          <label className="block text-xs font-semibold text-black/70 dark:text-[#94A3B8] mb-1">
             Focus Topics (Comma separated)
           </label>
           <input
@@ -197,7 +209,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
             value={targetTopics}
             onChange={(e) => setTargetTopics(e.target.value)}
             placeholder="e.g. Deadlocks, TCP Handshake, BST traversal..."
-            className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-white/15 bg-[#F0EDE4]/40 dark:bg-black/30 text-xs font-medium focus:ring-1 focus:ring-[#004741]"
+            className="w-full py-2 px-3 rounded-xl border border-black/15 dark:border-[#263449] bg-[#F0EDE4]/40 dark:bg-[#172033] text-xs font-medium focus:ring-1 focus:ring-[#004741]"
           />
         </div>
 
@@ -222,7 +234,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
 
       {/* Today's Tasks List */}
       <div className="space-y-3">
-        <h2 className="text-sm sm:text-base font-bold text-black dark:text-[#F0EDE4] tracking-tight">
+        <h2 className="text-sm sm:text-base font-bold text-black dark:text-[#F1F5F9] tracking-tight">
           {t.todaysTasks}
         </h2>
 
@@ -234,7 +246,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
               className={`p-3 sm:p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-2.5 sm:gap-3 ${
                 task.completed
                   ? 'bg-emerald-500/10 dark:bg-emerald-950/20 border-emerald-500/30 line-through opacity-80'
-                  : 'bg-white/90 dark:bg-[#0c1412] border-black/10 dark:border-white/10 hover:border-[#004741]'
+                  : 'bg-white/90 dark:bg-[#172033] border-black/10 dark:border-[#263449] hover:border-[#004741]'
               }`}
             >
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -243,7 +255,7 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
                   className={`shrink-0 ${
                     task.completed
                       ? 'text-emerald-600'
-                      : 'text-black/30 dark:text-[#F0EDE4]/30 hover:text-[#004741]'
+                      : 'text-black/30 dark:text-[#94A3B8]/50 hover:text-[#004741]'
                   }`}
                 >
                   {task.completed ? (
@@ -254,16 +266,16 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
                 </button>
 
                 <div className="min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#004741]/10 text-[#004741] dark:text-[#6ee7b7] mr-1.5 inline-block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#004741]/10 text-[#004741] dark:text-[#38BDF8] mr-1.5 inline-block">
                     {task.subject}
                   </span>
-                  <span className="text-xs sm:text-sm font-bold text-black dark:text-[#F0EDE4] truncate">
+                  <span className="text-xs sm:text-sm font-bold text-black dark:text-[#F1F5F9] truncate">
                     {task.title}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-black/60 dark:text-[#F0EDE4]/60 shrink-0">
+              <div className="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-black/60 dark:text-[#94A3B8] shrink-0">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{task.durationMin}m</span>
               </div>
@@ -275,19 +287,19 @@ export const StudyPlanView: React.FC<StudyPlanViewProps> = ({
       {/* Upcoming Milestones */}
       {planData.upcomingMilestones && planData.upcomingMilestones.length > 0 && (
         <div className="space-y-3 pt-2">
-          <h2 className="text-base font-bold text-black dark:text-[#F0EDE4] tracking-tight">
+          <h2 className="text-base font-bold text-black dark:text-[#F1F5F9] tracking-tight">
             Upcoming Milestones
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {planData.upcomingMilestones.map((m, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-2xl bg-white/80 dark:bg-black/30 border border-black/10 dark:border-white/10 space-y-1"
+                className="p-4 rounded-2xl bg-white/80 dark:bg-[#172033] border border-black/10 dark:border-[#263449] space-y-1"
               >
-                <span className="text-xs font-bold text-[#004741] dark:text-[#6ee7b7]">
+                <span className="text-xs font-bold text-[#004741] dark:text-[#38BDF8]">
                   {m.day}
                 </span>
-                <p className="text-xs font-medium text-black/80 dark:text-[#F0EDE4]/80">
+                <p className="text-xs font-medium text-black/80 dark:text-[#F1F5F9]/90">
                   {m.focus}
                 </p>
               </div>

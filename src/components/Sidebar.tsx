@@ -3,6 +3,7 @@ import {
   Home,
   GraduationCap,
   FileText,
+  BookOpen,
   MessageSquare,
   FileCheck2,
   Award,
@@ -10,8 +11,6 @@ import {
   CalendarCheck,
   Bookmark,
   User,
-  Sparkles,
-  Zap,
 } from 'lucide-react';
 import { soundManager } from '../services/soundManager';
 import { NavigationTab, AppLanguage } from '../types';
@@ -23,6 +22,17 @@ interface SidebarProps {
   language: AppLanguage;
   savedCount: number;
   quizCount: number;
+  currentSemester?: number | string;
+}
+
+interface NavGroup {
+  groupTitle: string;
+  items: Array<{
+    id: NavigationTab;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    count?: number;
+  }>;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -31,108 +41,165 @@ export const Sidebar: React.FC<SidebarProps> = ({
   language,
   savedCount,
   quizCount,
+  currentSemester = 4,
 }) => {
-  const t = translations[language];
+  const isHi = language === 'hi';
 
-  const navItems = [
-    { id: 'home' as NavigationTab, label: t.navHome, icon: Home },
-    { id: 'gtu_bca' as NavigationTab, label: t.navGtuBca, icon: GraduationCap, badge: 'Syllabus' },
-    { id: 'question_papers' as NavigationTab, label: t.navQuestionPapers || 'Question Papers', icon: FileText, badge: '2026' },
-    { id: 'ask_ai' as NavigationTab, label: t.navAskAI, icon: MessageSquare, badge: 'AI' },
-    { id: 'exam_mode' as NavigationTab, label: t.navExamMode, icon: FileCheck2, badge: 'Hot' },
-    { id: 'quiz' as NavigationTab, label: t.navQuiz, icon: Award, count: quizCount },
-    { id: 'notes_upload' as NavigationTab, label: t.navNotes, icon: UploadCloud },
-    { id: 'study_plan' as NavigationTab, label: t.navPlan, icon: CalendarCheck },
-    { id: 'saved' as NavigationTab, label: t.navSaved, icon: Bookmark, count: savedCount },
-    { id: 'profile' as NavigationTab, label: t.navProfile, icon: User },
+  const navGroups: NavGroup[] = [
+    {
+      groupTitle: isHi ? 'अवलोकन' : 'OVERVIEW',
+      items: [
+        {
+          id: 'home',
+          label: isHi ? 'डैशबोर्ड' : 'Dashboard',
+          icon: Home,
+        },
+      ],
+    },
+    {
+      groupTitle: isHi ? 'शैक्षणिक' : 'ACADEMICS',
+      items: [
+        {
+          id: 'gtu_bca',
+          label: isHi ? 'GTU BCA' : 'GTU BCA',
+          icon: GraduationCap,
+        },
+        {
+          id: 'question_papers',
+          label: isHi ? 'प्रश्न पत्र' : 'Question Papers',
+          icon: FileText,
+        },
+        {
+          id: 'study_materials',
+          label: isHi ? 'अध्ययन सामग्री' : 'Study Materials',
+          icon: BookOpen,
+        },
+      ],
+    },
+    {
+      groupTitle: isHi ? 'अभ्यास और परीक्षा' : 'PRACTICE & EXAM',
+      items: [
+        {
+          id: 'quiz',
+          label: isHi ? 'MCQ अभ्यास' : 'MCQ Practice',
+          icon: Award,
+          count: quizCount,
+        },
+        {
+          id: 'exam_mode',
+          label: isHi ? 'परीक्षा उत्तर जनरेटर' : 'Exam Answer Generator',
+          icon: FileCheck2,
+        },
+      ],
+    },
+    {
+      groupTitle: isHi ? 'AI अध्ययन' : 'AI STUDY',
+      items: [
+        {
+          id: 'ask_ai',
+          label: isHi ? 'AI से पूछें' : 'Ask AI',
+          icon: MessageSquare,
+        },
+        {
+          id: 'notes_upload',
+          label: isHi ? 'दस्तावेज़ विश्लेषक' : 'Document Analyzer',
+          icon: UploadCloud,
+        },
+        {
+          id: 'study_plan',
+          label: isHi ? 'अध्ययन योजनाकार' : 'Study Planner',
+          icon: CalendarCheck,
+        },
+      ],
+    },
+    {
+      groupTitle: isHi ? 'पुस्तकालय' : 'LIBRARY',
+      items: [
+        {
+          id: 'saved',
+          label: isHi ? 'सहेजा गया पुस्तकालय' : 'Saved Library',
+          icon: Bookmark,
+          count: savedCount,
+        },
+      ],
+    },
+    {
+      groupTitle: isHi ? 'खाता' : 'ACCOUNT',
+      items: [
+        {
+          id: 'profile',
+          label: isHi ? 'प्रोफ़ाइल' : 'Profile',
+          icon: User,
+        },
+      ],
+    },
   ];
 
   return (
     <aside
       id="desktop-sidebar"
-      className="hidden md:flex flex-col w-64 lg:w-72 shrink-0 border-r border-black/10 dark:border-white/10 bg-[#F0EDE4]/60 dark:bg-[#080d0b]/80 p-4 space-y-6 min-h-[calc(100vh-4rem)]"
+      className={`hidden md:flex flex-col w-64 lg:w-68 shrink-0 border-r border-black/10 dark:border-[#263449] bg-[#F0EDE4]/70 dark:bg-[#111827] px-3.5 py-5 justify-between select-none overflow-y-auto ${
+        activeTab === 'ask_ai' ? 'h-full min-h-0' : 'min-h-[calc(100vh-4rem)]'
+      }`}
     >
-      {/* Navigation Group */}
-      <div className="space-y-1.5 flex-1">
-        <p className="px-3 text-[11px] font-bold text-black/50 dark:text-[#F0EDE4]/50 uppercase tracking-wider mb-2">
-          {language === 'hi' ? 'नेविगेशन' : 'Menu'}
-        </p>
-
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              id={`sidebar-nav-${item.id}`}
-              onClick={() => {
-                soundManager.play('nav_tap');
-                onTabChange(item.id);
-              }}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all group ${
-                isActive
-                  ? 'bg-[#004741] text-[#F0EDE4] shadow-sm'
-                  : 'text-black dark:text-[#F0EDE4] hover:bg-black/5 dark:hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Icon
-                  className={`w-4 h-4 transition-transform group-hover:scale-110 ${
-                    isActive ? 'text-[#F0EDE4]' : 'text-[#004741] dark:text-[#6ee7b7]'
-                  }`}
-                />
-                <span>{item.label}</span>
-              </div>
-
-              {item.badge && (
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
+      <nav aria-label="Student Portal Navigation" className="space-y-5">
+        {navGroups.map((group) => (
+          <div key={group.groupTitle} className="space-y-1">
+            <p className="px-3 text-[11px] font-semibold text-black/45 dark:text-[#94A3B8]/80 tracking-wide mb-1.5">
+              {group.groupTitle}
+            </p>
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  id={`sidebar-nav-${item.id}`}
+                  onClick={() => {
+                    soundManager.play('nav_tap');
+                    onTabChange(item.id);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-[13px] font-semibold transition-all group ${
                     isActive
-                      ? 'bg-black/30 text-[#F0EDE4]'
-                      : 'bg-[#004741]/10 dark:bg-[#004741]/40 text-[#004741] dark:text-[#6ee7b7]'
+                      ? 'bg-[#004741] text-[#F0EDE4] shadow-sm'
+                      : 'text-black/80 dark:text-[#F1F5F9]/90 hover:bg-black/5 dark:hover:bg-[#1E293B] hover:text-black dark:hover:text-[#F1F5F9]'
                   }`}
                 >
-                  {item.badge}
-                </span>
-              )}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon
+                      className={`w-4 h-4 shrink-0 transition-transform ${
+                        isActive
+                          ? 'text-[#F0EDE4]'
+                          : 'text-[#004741] dark:text-[#38BDF8]'
+                      }`}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </div>
 
-              {typeof item.count === 'number' && item.count > 0 && (
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    isActive
-                      ? 'bg-[#F0EDE4]/20 text-[#F0EDE4]'
-                      : 'bg-black/5 dark:bg-white/10 text-black/70 dark:text-[#F0EDE4]/70'
-                  }`}
-                >
-                  {item.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Mini Study Booster Card */}
-      <div className="p-4 rounded-2xl bg-[#004741] text-[#F0EDE4] relative overflow-hidden shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="p-1.5 rounded-lg bg-black/20 text-[#F0EDE4]">
-            <Sparkles className="w-4 h-4" />
+                  {typeof item.count === 'number' && item.count > 0 && (
+                    <span
+                      className={`text-[11px] font-mono tabular-nums ${
+                        isActive
+                          ? 'text-[#F0EDE4]/85'
+                          : 'text-black/50 dark:text-[#94A3B8]'
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-          <span className="text-xs font-bold uppercase tracking-wider">Exam Readiness</span>
-        </div>
-        <p className="text-xs text-[#F0EDE4]/80 leading-relaxed mb-3">
-          University exam answers structured with definitions, flow diagrams & examiner tips.
-        </p>
-        <button
-          onClick={() => {
-            soundManager.play('card_open');
-            onTabChange('exam_mode');
-          }}
-          className="w-full py-2 px-3 rounded-xl bg-[#F0EDE4] text-[#004741] text-xs font-bold hover:bg-white active:scale-95 transition-all flex items-center justify-center gap-1.5"
-        >
-          <Zap className="w-3.5 h-3.5 fill-current" />
-          <span>Launch Exam Generator</span>
-        </button>
+        ))}
+      </nav>
+
+      {/* Academic Context Footer */}
+      <div className="pt-4 mt-4 border-t border-black/10 dark:border-[#263449] px-3 py-2.5 flex items-center justify-between text-xs text-black/60 dark:text-[#94A3B8]">
+        <span>GTU BCA Curriculum</span>
+        <span className="font-mono font-semibold text-[#004741] dark:text-[#38BDF8]">
+          Sem {currentSemester}
+        </span>
       </div>
     </aside>
   );

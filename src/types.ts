@@ -2,6 +2,7 @@ export type NavigationTab =
   | 'home'
   | 'gtu_bca'
   | 'question_papers'
+  | 'study_materials'
   | 'ask_ai'
   | 'exam_mode'
   | 'quiz'
@@ -9,7 +10,8 @@ export type NavigationTab =
   | 'study_plan'
   | 'saved'
   | 'profile'
-  | 'auth';
+  | 'auth'
+  | 'admin';
 
 export type AppLanguage = 'en' | 'hi';
 export type AppTheme = 'light' | 'dark';
@@ -18,6 +20,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role?: 'student' | 'admin';
   college?: string;
   course?: string;
   semester?: number | string;
@@ -75,6 +78,38 @@ export interface GTUQuestionPaper {
   paperContent?: GTUPaperDocument;
   uploadedAt?: string;
   published: boolean;
+}
+
+export interface CanonicalSubjectPaperRecord {
+  semester: number;
+  subjectId: string;
+  subjectCode: string;
+  subjectName: string;
+  shortName: string;
+  category: string;
+  credits: number;
+  examYear: number | null;
+  examSession: GTUExamSession | null;
+  availabilityStatus: 'available' | 'unavailable' | 'pending_verification' | 'archived';
+  pdfStatus: 'PDF Available' | 'PDF not available';
+  isAvailable: boolean;
+  verifiedPdfUrl: string | null;
+  paper: GTUQuestionPaper | null;
+  validation: {
+    isValid: boolean;
+    canView: boolean;
+    canDownload: boolean;
+    statusLabel: string;
+  };
+}
+
+export interface CanonicalSemesterPapersGroup {
+  semester: number;
+  title: string;
+  totalSubjects: number;
+  availableCount: number;
+  unavailableCount: number;
+  subjects: CanonicalSubjectPaperRecord[];
 }
 
 export interface SubjectItem {

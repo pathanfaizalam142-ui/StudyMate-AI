@@ -1,72 +1,158 @@
 import { jsPDF } from 'jspdf';
-import { GTUQuestionPaper, GTUExamSession } from '../types';
-import { GTU_QUESTION_PAPERS } from '../data/gtuPapersData';
+import {
+  CanonicalSemesterPapersGroup,
+  CanonicalSubjectPaperRecord,
+  GTUExamSession,
+  GTUQuestionPaper,
+} from '../types';
+import { api } from './api';
 
 /**
- * Service to manage GTU Previous Year Question Papers.
- * Supports filtering, searching, dynamic authentic PDF generation,
- * direct browser downloads, and future Admin panel operations.
+ * Service to manage GTU Previous Year Question Papers backed strictly by the canonical SQLite API (/api/papers).
+ * Zero fallback to legacy static gtuPapersData.ts is permitted.
  */
-
 class PaperService {
-  private papers: GTUQuestionPaper[] = [...GTU_QUESTION_PAPERS];
+  private semesterGroups: CanonicalSemesterPapersGroup[] = [];
+  private subjectRecords: CanonicalSubjectPaperRecord[] = [];
+  private loaded = false;
+
+  /**
+   * Fetches all canonical semesters and 35 subjects with their verified SQLite paper state from GET /api/papers.
+   */
+  public async fetchCanonicalPapers(semester?: number): Promise<CanonicalSemesterPapersGroup[]> {
+    const response = await api.getPapers(semester ? { semester } : undefined);
+    const groups = Array.isArray(response?.semesters) ? response.semesters : [];
+    if (!semester) {
+      this.semesterGroups = groups;
+      this.subjectRecords = groups.flatMap((g) => g.subjects);
+      this.loaded = true;
+    }
+    return groups;
+  }
+
+  /**
+   * Fetches a single verified paper by paper ID or canonical subjectCode from GET /api/papers/:id.
+   */
+  public async fetchVerifiedPaperById(idOrSubjectCode: string): Promise<GTUQuestionPaper> {
+    const response = await api.getPaperById(idOrSubjectCode);
+    if (!response?.paper || !response.paper.isAvailable) {
+      throw new Error(`Verified GTU paper not available for ${idOrSubjectCode}`);
+    }
+    return response.paper;
+  }
+
+  public isLoaded(): boolean {
+    return this.loaded;
+  }
+
+  public getSemesterGroups(): CanonicalSemesterPapersGroup[] {
+    return [...this.semesterGroups];
+  }
+
+  public getAllSubjectRecords(): CanonicalSubjectPaperRecord[] {
+    return [...this.subjectRecords];
+  }
 
   public getAllPapers(): GTUQuestionPaper[] {
-    return [...this.papers];
+    return this.subjectRecords
+      .filter((r) => r.isAvailable && r.paper !== null)
+      .map((r) => r.paper!);
   }
 
   public getPaperById(id: string): GTUQuestionPaper | undefined {
-    return this.papers.find((p) => p.id === id);
+    for (const r of this.subjectRecords) {
+      if (r.paper && r.paper.id === id) {
+        return r.paper;
+      }
+    }
+    return undefined;
   }
 
-  public filterPapers(params: {
-    semester?: number | 'all';
-    year?: number | 'all';
-    exam?: GTUExamSession | 'all';
-    searchQuery?: string;
-    sortBy?: 'newest' | 'oldest' | 'subject';
-  }): GTUQuestionPaper[] {
-    let filtered = [...this.papers];
+  /**
+   * Filters canonical subject-paper records across all 35 GTU BCA subjects (Sem 1-6).
+   */
+  public filterSubjectRecords(
+    records: CanonicalSubjectPaperRecord[],
+    params: {
+      semester?: number | 'all';
+      subjectCode?: string | 'all';
+      year?: number | 'all';
+      exam?: GTUExamSession | 'all';
+      availability?: 'all' | 'available' | 'unavailable';
+      searchQuery?: string;
+      sortBy?: 'canonical' | 'newest' | 'oldest' | 'subject';
+    }
+  ): CanonicalSubjectPaperRecord[] {
+    let filtered = [...records];
 
     if (params.semester && params.semester !== 'all') {
-      filtered = filtered.filter((p) => p.semester === Number(params.semester));
+      filtered = filtered.filter((r) => r.semester === Number(params.semester));
+    }
+
+    if (params.subjectCode && params.subjectCode !== 'all') {
+      const targetCode = params.subjectCode.toUpperCase().trim();
+      filtered = filtered.filter((r) => r.subjectCode.toUpperCase() === targetCode);
+    }
+
+    if (params.availability === 'available') {
+      filtered = filtered.filter((r) => r.isAvailable);
+    } else if (params.availability === 'unavailable') {
+      filtered = filtered.filter((r) => !r.isAvailable);
     }
 
     if (params.year && params.year !== 'all') {
-      filtered = filtered.filter((p) => p.year === Number(params.year));
+      filtered = filtered.filter((r) => r.examYear === Number(params.year));
     }
 
     if (params.exam && params.exam !== 'all') {
-      filtered = filtered.filter((p) => p.exam === params.exam);
+      filtered = filtered.filter((r) => r.examSession === params.exam);
     }
 
     if (params.searchQuery && params.searchQuery.trim()) {
       const q = params.searchQuery.trim().toLowerCase();
       filtered = filtered.filter(
-        (p) =>
-          p.subject.toLowerCase().includes(q) ||
-          p.subjectCode.toLowerCase().includes(q) ||
-          p.exam.toLowerCase().includes(q) ||
-          p.year.toString().includes(q) ||
-          `sem ${p.semester}`.includes(q) ||
-          `semester ${p.semester}`.includes(q)
+        (r) =>
+          r.subjectName.toLowerCase().includes(q) ||
+          r.subjectCode.toLowerCase().includes(q) ||
+          r.shortName.toLowerCase().includes(q) ||
+          r.category.toLowerCase().includes(q) ||
+          (r.examSession && r.examSession.toLowerCase().includes(q)) ||
+          (r.examYear && r.examYear.toString().includes(q)) ||
+          `sem ${r.semester}`.includes(q) ||
+          `semester ${r.semester}`.includes(q)
       );
     }
 
-    if (params.sortBy === 'oldest') {
-      filtered.sort((a, b) => a.year - b.year || a.semester - b.semester);
+    if (params.sortBy === 'newest') {
+      filtered.sort(
+        (a, b) =>
+          (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0) ||
+          (b.examYear || 0) - (a.examYear || 0) ||
+          a.semester - b.semester ||
+          a.subjectCode.localeCompare(b.subjectCode)
+      );
+    } else if (params.sortBy === 'oldest') {
+      filtered.sort(
+        (a, b) =>
+          (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0) ||
+          (a.examYear || 9999) - (b.examYear || 9999) ||
+          a.semester - b.semester ||
+          a.subjectCode.localeCompare(b.subjectCode)
+      );
     } else if (params.sortBy === 'subject') {
-      filtered.sort((a, b) => a.subject.localeCompare(b.subject));
+      filtered.sort((a, b) => a.subjectName.localeCompare(b.subjectName));
     } else {
-      // default: newest
-      filtered.sort((a, b) => b.year - a.year || a.semester - b.semester);
+      // default: canonical semester & subjectCode order
+      filtered.sort(
+        (a, b) => a.semester - b.semester || a.subjectCode.localeCompare(b.subjectCode)
+      );
     }
 
     return filtered;
   }
 
   /**
-   * Generates an authentic, beautifully formatted GTU examination PDF file.
+   * Generates an authentic, formatted GTU examination PDF file strictly from verified SQLite paperContent.
    */
   public generatePaperPDF(paper: GTUQuestionPaper): jsPDF {
     const doc = new jsPDF({
@@ -83,22 +169,28 @@ class PaperService {
     const content = paper.paperContent;
 
     // Header border
-    doc.setDrawColor(0, 71, 65); // Cyprus green
+    doc.setDrawColor(0, 71, 65);
     doc.setLineWidth(0.6);
-    doc.rect(margin - 2, margin - 2, pageWidth - (margin * 2) + 4, pageHeight - (margin * 2) + 4);
+    doc.rect(margin - 2, margin - 2, pageWidth - margin * 2 + 4, pageHeight - margin * 2 + 4);
 
     // University Header
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(0, 71, 65);
-    doc.text(content?.university || 'GUJARAT TECHNOLOGICAL UNIVERSITY', pageWidth / 2, y + 4, { align: 'center' });
+    doc.text(
+      content?.university || 'GUJARAT TECHNOLOGICAL UNIVERSITY',
+      pageWidth / 2,
+      y + 4,
+      { align: 'center' }
+    );
     y += 9;
 
     // Degree & Session
     doc.setFontSize(10);
     doc.setTextColor(40, 40, 40);
     doc.text(
-      content?.degree || `BCA - SEMESTER ${paper.semester} • EXAMINATION - ${paper.exam.toUpperCase()} ${paper.year}`,
+      content?.degree ||
+        `BCA - SEMESTER ${paper.semester} • EXAMINATION - ${paper.exam.toUpperCase()} ${paper.year}`,
       pageWidth / 2,
       y,
       { align: 'center' }
@@ -119,17 +211,21 @@ class PaperService {
     y += 4.5;
 
     doc.text(`Subject Name: ${paper.subject}`, margin, y);
-    doc.text(`Time: ${content?.time || '02:30 PM to 05:00 PM'}`, pageWidth - margin - 42, y);
+    doc.text(`Time: ${content?.time || '10:30 AM to 01:00 PM'}`, pageWidth - margin - 42, y);
     y += 4.5;
 
     doc.setFont('helvetica', 'normal');
-    doc.text(`Date of Exam: ${content?.date || `Session ${paper.exam} ${paper.year}`}`, margin, y);
+    doc.text(
+      `Date of Exam: ${content?.date || `Session ${paper.exam} ${paper.year}`}`,
+      margin,
+      y
+    );
     doc.text(`Seat No: [ _______________ ]`, pageWidth - margin - 42, y);
     y += 6;
 
     // Instructions Box
-    doc.setFillColor(245, 243, 238); // Warm Sand
-    doc.rect(margin, y, pageWidth - (margin * 2), 16, 'F');
+    doc.setFillColor(245, 243, 238);
+    doc.rect(margin, y, pageWidth - margin * 2, 16, 'F');
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 71, 65);
@@ -152,16 +248,19 @@ class PaperService {
     // Questions Rendering
     if (content?.sections && content.sections.length > 0) {
       content.sections.forEach((section) => {
-        // Check for page break
         if (y > pageHeight - 35) {
           doc.addPage();
           doc.setDrawColor(0, 71, 65);
           doc.setLineWidth(0.6);
-          doc.rect(margin - 2, margin - 2, pageWidth - (margin * 2) + 4, pageHeight - (margin * 2) + 4);
+          doc.rect(
+            margin - 2,
+            margin - 2,
+            pageWidth - margin * 2 + 4,
+            pageHeight - margin * 2 + 4
+          );
           y = margin + 4;
         }
 
-        // Section Title
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
         doc.setTextColor(0, 71, 65);
@@ -173,7 +272,12 @@ class PaperService {
             doc.addPage();
             doc.setDrawColor(0, 71, 65);
             doc.setLineWidth(0.6);
-            doc.rect(margin - 2, margin - 2, pageWidth - (margin * 2) + 4, pageHeight - (margin * 2) + 4);
+            doc.rect(
+              margin - 2,
+              margin - 2,
+              pageWidth - margin * 2 + 4,
+              pageHeight - margin * 2 + 4
+            );
             y = margin + 4;
           }
 
@@ -182,20 +286,17 @@ class PaperService {
           doc.setTextColor(20, 20, 20);
           doc.text(q.qNumber, margin, y);
 
-          // Right-aligned marks
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(0, 71, 65);
           doc.text(`[${q.marks} Marks]`, pageWidth - margin, y, { align: 'right' });
 
-          // Question text with word wrapping
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(40, 40, 40);
-          const maxTextWidth = pageWidth - (margin * 2) - 36;
+          const maxTextWidth = pageWidth - margin * 2 - 36;
           const lines = doc.splitTextToSize(q.text, maxTextWidth);
           doc.text(lines, margin + 18, y);
           y += Math.max(lines.length * 4.2, 5.5);
 
-          // OR Question if present
           if (q.orQuestion) {
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(7.5);
@@ -218,34 +319,62 @@ class PaperService {
             y += Math.max(orLines.length * 4.2, 5.5);
           }
 
-          y += 2.5; // spacing between questions
+          y += 2.5;
         });
 
         y += 3;
       });
     }
 
-    // Page footer note
     doc.setFontSize(7);
     doc.setTextColor(140, 140, 140);
-    doc.text('Gujarat Technological University • Verified BCA Examination Paper Archive • StudyMate AI', pageWidth / 2, pageHeight - margin + 1, { align: 'center' });
+    doc.text(
+      `Gujarat Technological University • Verified BCA Examination Paper (${paper.subjectCode}) • StudyMate AI`,
+      pageWidth / 2,
+      pageHeight - margin + 1,
+      { align: 'center' }
+    );
 
     return doc;
   }
 
   /**
-   * Downloads the actual PDF file directly to the user's device with meaningful filename.
+   * Downloads the verified PDF file directly to the user's device with canonical filename.
    */
   public async downloadPaperPDF(paper: GTUQuestionPaper): Promise<void> {
     if (!paper.isAvailable) {
-      throw new Error(`PDF for ${paper.subject} (${paper.year}) has not been uploaded yet.`);
+      throw new Error(`PDF for ${paper.subject} (${paper.subjectCode}) is not available yet.`);
     }
 
-    if (paper.pdfUrl) {
-      // Download remote/static file directly
+    let verifiedPaper = paper;
+    try {
+      const fetched = await this.fetchVerifiedPaperById(paper.id);
+      if (fetched.subjectCode.toUpperCase() !== paper.subjectCode.toUpperCase()) {
+        throw new Error(
+          `Integrity violation: Paper subject mismatch (${fetched.subjectCode} !== ${paper.subjectCode})`
+        );
+      }
+      verifiedPaper = fetched;
+    } catch (fetchErr: any) {
+      if (fetchErr?.message?.includes('Integrity violation')) {
+        throw fetchErr;
+      }
+      if (
+        !verifiedPaper.paperContent ||
+        !Array.isArray(verifiedPaper.paperContent.sections) ||
+        verifiedPaper.paperContent.sections.length === 0
+      ) {
+        throw fetchErr;
+      }
+    }
+
+    // Only use direct anchor download if pdfUrl is an actual static/external .pdf file
+    if (verifiedPaper.pdfUrl && verifiedPaper.pdfUrl.toLowerCase().endsWith('.pdf')) {
       const link = document.createElement('a');
-      link.href = paper.pdfUrl;
-      link.download = paper.fileName || `GTU_BCA_Sem${paper.semester}_${paper.subjectCode}_${paper.year}.pdf`;
+      link.href = verifiedPaper.pdfUrl;
+      link.download =
+        verifiedPaper.fileName ||
+        `GTU_BCA_Sem${verifiedPaper.semester}_${verifiedPaper.subjectCode}_${verifiedPaper.year}_${verifiedPaper.exam}.pdf`;
       link.target = '_blank';
       document.body.appendChild(link);
       link.click();
@@ -253,33 +382,11 @@ class PaperService {
       return;
     }
 
-    // Generate genuine PDF via jsPDF
-    const doc = this.generatePaperPDF(paper);
-    const fileName = paper.fileName || `GTU_BCA_Sem${paper.semester}_${paper.subject.replace(/\s+/g, '_')}_${paper.year}.pdf`;
+    const doc = this.generatePaperPDF(verifiedPaper);
+    const fileName =
+      verifiedPaper.fileName ||
+      `GTU_BCA_Sem${verifiedPaper.semester}_${verifiedPaper.subjectCode}_${verifiedPaper.year}_${verifiedPaper.exam}.pdf`;
     doc.save(fileName);
-  }
-
-  /**
-   * Future Admin Scalability: Upload/Add new paper.
-   */
-  public addPaper(paper: Omit<GTUQuestionPaper, 'id'>): GTUQuestionPaper {
-    const newPaper: GTUQuestionPaper = {
-      ...paper,
-      id: `gtu-paper-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      published: true,
-      uploadedAt: new Date().toISOString().split('T')[0],
-    };
-    this.papers.unshift(newPaper);
-    return newPaper;
-  }
-
-  /**
-   * Future Admin Scalability: Delete paper.
-   */
-  public deletePaper(id: string): boolean {
-    const initialLen = this.papers.length;
-    this.papers = this.papers.filter((p) => p.id !== id);
-    return this.papers.length !== initialLen;
   }
 }
 

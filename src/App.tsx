@@ -13,6 +13,7 @@ import { ProfileView } from './views/ProfileView';
 import { GTUBcaView } from './views/GTUBcaView';
 import { QuestionPapersView } from './views/QuestionPapersView';
 import { AuthView } from './views/AuthView';
+import { AdminView } from './views/AdminView';
 import { AddSubjectModal } from './components/AddSubjectModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { soundManager } from './services/soundManager';
@@ -34,17 +35,38 @@ export default function App() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
 
-  // Navigation State: When unauthenticated, route starts at 'auth'. When logged in, route starts at 'home'.
-  const [activeTab, setActiveTab] = useState<NavigationTab>(() =>
-    authService.getCurrentUser() ? 'home' : 'auth'
-  );
+  const checkIsAdminPath = () =>
+    typeof window !== 'undefined' &&
+    (window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/'));
+
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminPath());
+
+  // Navigation State: When on /admin*, route is 'admin'. Otherwise starts at 'home' (if logged in) or 'auth'.
+  const [activeTab, setActiveTab] = useState<NavigationTab>(() => {
+    if (checkIsAdminPath()) return 'admin';
+    return authService.getCurrentUser() ? 'home' : 'auth';
+  });
   const [navQuery, setNavQuery] = useState<string | undefined>(undefined);
   const [navSubject, setNavSubject] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    const handlePopState = () => {
+      const adminPath = checkIsAdminPath();
+      setIsAdminRoute(adminPath);
+      if (adminPath) {
+        setActiveTab('admin');
+      } else {
+        setActiveTab(authService.getCurrentUser() ? 'home' : 'auth');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = authService.subscribe((user) => {
       setCurrentUser(user);
-      if (!user) {
+      if (!user && !checkIsAdminPath()) {
         setActiveTab('auth');
       }
     });
@@ -93,7 +115,10 @@ export default function App() {
   const [savedItems, setSavedItems] = useState<SavedItem[]>(() => {
     try {
       const stored = localStorage.getItem('studymate_saved');
-      if (stored) return JSON.parse(stored);
+      if (stored !== null) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {}
     return [
       {
@@ -123,7 +148,10 @@ export default function App() {
   const [quizHistory, setQuizHistory] = useState<QuizResult[]>(() => {
     try {
       const stored = localStorage.getItem('studymate_quizzes');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {}
     return [
       {
@@ -145,7 +173,10 @@ export default function App() {
   const [uploadedNotes, setUploadedNotes] = useState<UploadedNote[]>(() => {
     try {
       const stored = localStorage.getItem('studymate_notes');
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {}
     return [
       {
@@ -294,20 +325,47 @@ export default function App() {
   };
 
   const handleSaveItem = (itemData: Omit<SavedItem, 'id' | 'timestamp'>) => {
-    const newItem: SavedItem = {
-      id: `saved-${Date.now()}`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      ...itemData,
-    };
-    setSavedItems((prev) => [newItem, ...prev]);
+    setSavedItems((prev) => {
+      // Prevent duplicate saving of identical content or exact question
+      const isDuplicate = prev.some(
+        (item) => item.content === itemData.content || (item.title === itemData.title && item.subject === itemData.subject)
+      );
+      if (isDuplicate) return prev;
+
+      const newItem: SavedItem = {
+        id: `saved-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        ...itemData,
+      };
+      const next = [newItem, ...prev];
+      try {
+        localStorage.setItem('studymate_saved', JSON.stringify(next));
+      } catch (err) {
+        console.error('Failed to sync saved items to localStorage:', err);
+      }
+      return next;
+    });
   };
 
   const handleDeleteSavedItem = (id: string) => {
-    setSavedItems((prev) => prev.filter((item) => item.id !== id));
+    setSavedItems((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      try {
+        localStorage.setItem('studymate_saved', JSON.stringify(next));
+      } catch (err) {
+        console.error('Failed to sync saved items to localStorage:', err);
+      }
+      return next;
+    });
   };
 
   const handleClearAllSaved = () => {
     setSavedItems([]);
+    try {
+      localStorage.setItem('studymate_saved', JSON.stringify([]));
+    } catch (err) {
+      console.error('Failed to clear saved items in localStorage:', err);
+    }
   };
 
   const handleQuizCompleted = (result: QuizResult) => {
@@ -327,7 +385,7 @@ export default function App() {
     setSavedItems([]);
     setQuizHistory([]);
     setActiveTab('home');
-    alert('All local app data has been reset to defaults.');
+    soundManager.play('delete');
     window.location.reload();
   };
 
@@ -336,6 +394,15 @@ export default function App() {
     setCurrentUser(null);
     soundManager.play('button_click');
     setActiveTab('auth');
+  };
+
+  const handleUpdateProfile = async (updates: Partial<User>) => {
+    try {
+      const updated = await authService.updateUserProfile(updates);
+      setCurrentUser(updated);
+    } catch (err) {
+      console.error('Failed to update student profile:', err);
+    }
   };
 
   const handleAuthSuccess = (user: User) => {
@@ -351,13 +418,38 @@ export default function App() {
   const completedTasksCount = studyPlan.todayTasks.filter((t) => t.completed).length;
   const totalTasksCount = studyPlan.todayTasks.length;
 
+  // STRUCTURAL PORTAL SEPARATION:
+  // /admin and /admin/login render ONLY the dedicated Admin Portal shell — never Student Navbar, Student Sidebar, or Student BottomNavigation.
+  if (isAdminRoute || activeTab === 'admin') {
+    return (
+      <div
+        id="studymate-admin-app"
+        className="min-h-screen bg-[#F0EDE4] dark:bg-[#0B1120] text-black dark:text-[#F1F5F9] selection:bg-[#004741] selection:text-[#F0EDE4]"
+      >
+        <div className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6">
+          <AdminView
+            language={language}
+            theme={theme}
+            onExitAdmin={() => {
+              if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+                window.history.pushState({}, '', '/');
+              }
+              setIsAdminRoute(false);
+              setActiveTab(currentUser ? 'home' : 'auth');
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // VISIBLE LOGIN ENTRY SCREEN:
   // When no authenticated session exists, show the Login screen directly as the initial application screen.
   if (!currentUser) {
     return (
       <div
         id="studymate-auth-app"
-        className="min-h-screen bg-[#F0EDE4] dark:bg-[#050807] text-black dark:text-[#F0EDE4] selection:bg-[#004741] selection:text-[#F0EDE4]"
+        className="min-h-screen bg-[#F0EDE4] dark:bg-[#0B1120] text-black dark:text-[#F1F5F9] selection:bg-[#004741] selection:text-[#F0EDE4]"
       >
         <AuthView
           language={language}
@@ -375,7 +467,9 @@ export default function App() {
   return (
     <div
       id="studymate-app"
-      className="min-h-screen flex flex-col bg-[#F0EDE4] dark:bg-[#050807] text-black dark:text-[#F0EDE4] selection:bg-[#004741] selection:text-[#F0EDE4]"
+      className={`flex flex-col bg-[#F0EDE4] dark:bg-[#0B1120] text-black dark:text-[#F1F5F9] selection:bg-[#004741] selection:text-[#F0EDE4] ${
+        activeTab === 'ask_ai' ? 'h-dvh max-h-dvh overflow-hidden' : 'min-h-screen'
+      }`}
     >
       {/* Top Navbar */}
       <Navbar
@@ -389,12 +483,24 @@ export default function App() {
         onNotificationClick={() => setIsNotificationsOpen(true)}
         onProfileClick={() => setActiveTab('profile')}
         onOpenAuth={handleOpenAuth}
+        onHomeClick={() => {
+          setNavQuery(undefined);
+          setNavSubject(undefined);
+          setActiveTab('home');
+        }}
+        onAskAIClick={() => setActiveTab('ask_ai')}
         activeTab={activeTab}
         currentUser={currentUser}
       />
 
       {/* Main Content Area: Sidebar on Desktop + Dynamic View */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto min-w-0 overflow-x-hidden">
+      <div
+        className={`flex-1 flex max-w-7xl w-full mx-auto min-w-0 ${
+          activeTab === 'ask_ai'
+            ? 'min-h-0 overflow-hidden'
+            : 'overflow-x-hidden'
+        }`}
+      >
         {/* Desktop / Tablet Sidebar */}
         <Sidebar
           activeTab={activeTab}
@@ -406,10 +512,152 @@ export default function App() {
           language={language}
           savedCount={savedItems.length}
           quizCount={quizHistory.length}
+          currentSemester={Number(currentUser?.semester) || 3}
         />
 
         {/* View Router Container */}
-        <main className="flex-1 px-3 sm:px-6 py-4 sm:py-6 pb-24 md:pb-8 overflow-x-hidden min-w-0 w-full">
+        <main
+          className={`flex-1 flex flex-col min-w-0 w-full ${
+            activeTab === 'ask_ai'
+              ? 'px-3 sm:px-6 pt-2.5 sm:pt-3.5 pb-16 md:pb-2.5 min-h-0 overflow-hidden'
+              : 'px-3 sm:px-6 py-4 sm:py-6 pb-24 md:pb-8 overflow-x-hidden'
+          }`}
+        >
+          {/* Contextual Section Group Switcher (Academics | Practice & Exam | AI Study) */}
+          {(activeTab === 'gtu_bca' ||
+            activeTab === 'question_papers' ||
+            activeTab === 'study_materials') && (
+            <div className="mb-4 flex items-center justify-between gap-3 pb-3 border-b border-black/10 dark:border-[#263449] overflow-x-auto no-scrollbar">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-black/50 dark:text-[#94A3B8] shrink-0">
+                {language === 'hi' ? 'शैक्षणिक (Academics)' : 'Academics'}
+              </span>
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-[#263449] shrink-0">
+                {(
+                  [
+                    { id: 'gtu_bca', label: 'GTU BCA' },
+                    {
+                      id: 'question_papers',
+                      label: language === 'hi' ? 'प्रश्न पत्र' : 'Question Papers',
+                    },
+                    {
+                      id: 'study_materials',
+                      label: language === 'hi' ? 'अध्ययन सामग्री' : 'Study Materials',
+                    },
+                  ] as const
+                ).map((item) => {
+                  const active = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        soundManager.play('nav_tap');
+                        setActiveTab(item.id);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                        active
+                          ? 'bg-[#004741] text-[#F0EDE4] shadow-xs'
+                          : 'text-black/70 dark:text-[#94A3B8] hover:text-black dark:hover:text-[#F1F5F9]'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {(activeTab === 'quiz' || activeTab === 'exam_mode') && (
+            <div className="mb-4 flex items-center justify-between gap-3 pb-3 border-b border-black/10 dark:border-[#263449] overflow-x-auto no-scrollbar">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-black/50 dark:text-[#94A3B8] shrink-0">
+                {language === 'hi' ? 'अभ्यास और परीक्षा (Practice & Exam)' : 'Practice & Exam'}
+              </span>
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-[#263449] shrink-0">
+                {(
+                  [
+                    { id: 'quiz', label: language === 'hi' ? 'MCQ अभ्यास' : 'MCQ Practice' },
+                    {
+                      id: 'exam_mode',
+                      label:
+                        language === 'hi'
+                          ? 'परीक्षा उत्तर जनरेटर'
+                          : 'Exam Answer Generator',
+                    },
+                  ] as const
+                ).map((item) => {
+                  const active = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        soundManager.play('nav_tap');
+                        setActiveTab(item.id);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                        active
+                          ? 'bg-[#004741] text-[#F0EDE4] shadow-xs'
+                          : 'text-black/70 dark:text-[#94A3B8] hover:text-black dark:hover:text-[#F1F5F9]'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {(activeTab === 'ask_ai' ||
+            activeTab === 'notes_upload' ||
+            activeTab === 'study_plan') && (
+            <div
+              className={`flex items-center justify-between gap-3 border-b border-black/10 dark:border-[#263449] overflow-x-auto no-scrollbar shrink-0 ${
+                activeTab === 'ask_ai' ? 'mb-2 pb-2' : 'mb-4 pb-3'
+              }`}
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-black/50 dark:text-[#94A3B8] shrink-0">
+                {language === 'hi' ? 'AI अध्ययन (AI Study)' : 'AI Study'}
+              </span>
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-[#263449] shrink-0">
+                {(
+                  [
+                    { id: 'ask_ai', label: language === 'hi' ? 'AI से पूछें' : 'Ask AI' },
+                    {
+                      id: 'notes_upload',
+                      label:
+                        language === 'hi' ? 'दस्तावेज़ विश्लेषक' : 'Document Analyzer',
+                    },
+                    {
+                      id: 'study_plan',
+                      label: language === 'hi' ? 'अध्ययन योजनाकार' : 'Study Planner',
+                    },
+                  ] as const
+                ).map((item) => {
+                  const active = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        soundManager.play('nav_tap');
+                        setActiveTab(item.id);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                        active
+                          ? 'bg-[#004741] text-[#F0EDE4] shadow-xs'
+                          : 'text-black/70 dark:text-[#94A3B8] hover:text-black dark:hover:text-[#F1F5F9]'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'home' && (
             <DashboardView
               language={language}
@@ -418,15 +666,41 @@ export default function App() {
               onNavigate={handleNavigate}
               completedTasksCount={completedTasksCount}
               totalTasksCount={totalTasksCount}
+              currentSemester={Number(currentUser?.semester) || 3}
+              studyPlan={studyPlan}
+              onToggleTask={(taskId) => {
+                setStudyPlan((prev) => ({
+                  ...prev,
+                  todayTasks: prev.todayTasks.map((t) =>
+                    t.id === taskId ? { ...t, completed: !t.completed } : t
+                  ),
+                }));
+              }}
+              savedItems={savedItems}
+              quizHistory={quizHistory}
+              uploadedNotes={uploadedNotes}
             />
           )}
 
           {activeTab === 'gtu_bca' && (
             <GTUBcaView
               language={language}
-              theme={theme}
               onNavigate={handleNavigate}
-              onSaveItem={handleSaveItem}
+              onSaveAnswer={handleSaveItem}
+              initialSubjectName={navSubject}
+              initialSubTab={navQuery}
+              workspaceMode="curriculum"
+            />
+          )}
+
+          {activeTab === 'study_materials' && (
+            <GTUBcaView
+              language={language}
+              onNavigate={handleNavigate}
+              onSaveAnswer={handleSaveItem}
+              initialSubjectName={navSubject}
+              initialSubTab={navQuery || 'materials'}
+              workspaceMode="materials"
             />
           )}
 
@@ -448,7 +722,11 @@ export default function App() {
               theme={theme}
               subjects={subjects}
               initialSubject={navSubject}
+              initialQuestion={navQuery}
               onSaveItem={handleSaveItem}
+              onDeleteSavedItem={handleDeleteSavedItem}
+              savedItems={savedItems}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -460,6 +738,7 @@ export default function App() {
               initialSubject={navSubject}
               initialTopic={navQuery}
               onQuizCompleted={handleQuizCompleted}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -491,6 +770,7 @@ export default function App() {
               savedItems={savedItems}
               onDeleteSavedItem={handleDeleteSavedItem}
               onClearAllSaved={handleClearAllSaved}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -498,8 +778,11 @@ export default function App() {
             <QuestionPapersView
               language={language}
               theme={theme}
+              initialSubject={navSubject}
               onNavigateToAskAI={(query, subject) => handleNavigate('ask_ai', query, subject)}
-              onNavigateToCurriculum={() => handleNavigate('gtu_bca')}
+              onNavigateToCurriculum={(_sem, subjectCode) =>
+                handleNavigate('gtu_bca', 'overview', subjectCode)
+              }
             />
           )}
 
@@ -531,6 +814,8 @@ export default function App() {
               currentUser={currentUser}
               onLogout={handleLogout}
               onOpenAuth={() => setActiveTab('auth')}
+              onUpdateProfile={handleUpdateProfile}
+              onNavigate={handleNavigate}
             />
           )}
         </main>
@@ -539,6 +824,7 @@ export default function App() {
       {/* Mobile Bottom Navigation */}
       <BottomNavigation
         activeTab={activeTab}
+        savedCount={savedItems.length}
         onTabChange={(tab) => {
           setNavQuery(undefined);
           setNavSubject(undefined);

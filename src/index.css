@@ -26,8 +26,8 @@
   }
 
   .dark body {
-    background-color: #050807;
-    color: #F0EDE4;
+    background-color: #0B1120;
+    color: #F1F5F9;
   }
 
   h1, h2, h3, .font-display {
@@ -73,11 +73,11 @@
 }
 
 .dark .katex {
-  color: #F0EDE4;
+  color: #F1F5F9;
 }
 
 .dark .katex .katex-html {
-  color: #F0EDE4;
+  color: #F1F5F9;
 }
 
 .inline-math {

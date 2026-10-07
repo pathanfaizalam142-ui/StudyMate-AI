@@ -41,13 +41,13 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-md rounded-3xl bg-[#F0EDE4] dark:bg-[#0c1412] border border-black/20 dark:border-white/20 shadow-2xl p-4 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
+      <div className="w-full max-w-md rounded-3xl bg-[#F0EDE4] dark:bg-[#172033] border border-black/20 dark:border-[#263449] shadow-2xl p-4 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-black/10 dark:border-[#263449] pb-3">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-[#004741] text-[#F0EDE4]">
               <BookOpen className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-black dark:text-[#F0EDE4]">
+            <h2 className="text-base font-bold text-black dark:text-[#F1F5F9]">
               {language === 'hi' ? 'नया विषय जोड़ें' : 'Add New Subject'}
             </h2>
           </div>
@@ -56,7 +56,7 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({
               soundManager.play('button_click');
               onClose();
             }}
-            className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-black dark:text-[#F0EDE4]"
+            className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[#1E293B] text-black dark:text-[#F1F5F9]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -64,7 +64,7 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-black dark:text-[#F0EDE4] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-black dark:text-[#F1F5F9] uppercase tracking-wider mb-1.5">
               {language === 'hi' ? 'विषय का नाम' : 'Subject Name *'}
             </label>
             <input
@@ -73,12 +73,12 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Database Management Systems"
-              className="w-full py-2.5 px-3 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#004741]"
+              className="w-full py-2.5 px-3 rounded-xl border border-black/15 dark:border-[#263449] bg-white dark:bg-[#111827] text-sm focus:outline-none focus:ring-2 focus:ring-[#004741]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-black dark:text-[#F0EDE4] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-black dark:text-[#F1F5F9] uppercase tracking-wider mb-1.5">
               {language === 'hi' ? 'विषय कोड (वैकल्पिक)' : 'Course Code (Optional)'}
             </label>
             <input
@@ -86,12 +86,12 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="e.g. CS-402 / IT-301"
-              className="w-full py-2.5 px-3 rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#004741]"
+              className="w-full py-2.5 px-3 rounded-xl border border-black/15 dark:border-[#263449] bg-white dark:bg-[#111827] text-sm focus:outline-none focus:ring-2 focus:ring-[#004741]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-black dark:text-[#F0EDE4] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-black dark:text-[#F1F5F9] uppercase tracking-wider mb-1.5">
               {language === 'hi' ? 'आइकन शैली' : 'Icon Style'}
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -111,7 +111,7 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({
                   className={`py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all ${
                     iconName === opt.id
                       ? 'bg-[#004741] text-[#F0EDE4] border-[#004741]'
-                      : 'bg-white dark:bg-black/40 border-black/10 dark:border-white/10 text-black dark:text-[#F0EDE4]'
+                      : 'bg-white dark:bg-[#111827] border-black/10 dark:border-[#263449] text-black dark:text-[#F1F5F9]'
                   }`}
                 >
                   {opt.label}
@@ -127,7 +127,7 @@ export const AddSubjectModal: React.FC<AddSubjectModalProps> = ({
                 soundManager.play('button_click');
                 onClose();
               }}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-black dark:text-[#F0EDE4] hover:bg-black/5 dark:hover:bg-white/5"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-black dark:text-[#F1F5F9] hover:bg-black/5 dark:hover:bg-[#1E293B]"
             >
               Cancel
             </button>

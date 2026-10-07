@@ -239,7 +239,7 @@ export function validateGtuPapersData(papers: GTUQuestionPaper[]): PaperValidati
  */
 export function runDevPaperAudit(papers: GTUQuestionPaper[]): PaperValidationReport {
   const report = validateGtuPapersData(papers);
-  if (import.meta.env.DEV) {
+  if ((import.meta as any).env?.DEV) {
     if (report.isValid) {
       console.log(
         `%c[GTU Papers Audit] PASSED: All ${report.totalCurriculumSubjects} GTU BCA subjects validated across Sem 1-6 (${report.totalAvailablePapers} authentic papers available).`,

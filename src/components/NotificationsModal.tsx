@@ -44,13 +44,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-md rounded-3xl bg-[#F0EDE4] dark:bg-[#0c1412] border border-black/20 dark:border-white/20 shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
+      <div className="w-full max-w-md rounded-3xl bg-[#F0EDE4] dark:bg-[#172033] border border-black/20 dark:border-[#263449] shadow-2xl p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-black/10 dark:border-[#263449] pb-3">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl bg-[#004741] text-[#F0EDE4]">
               <Bell className="w-4 h-4" />
             </div>
-            <h2 className="text-base font-bold text-black dark:text-[#F0EDE4]">
+            <h2 className="text-base font-bold text-black dark:text-[#F1F5F9]">
               {language === 'hi' ? 'अधिसूचनाएं' : 'Study Alerts'}
             </h2>
           </div>
@@ -59,7 +59,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               soundManager.play('button_click');
               onClose();
             }}
-            className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-black dark:text-[#F0EDE4]"
+            className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[#1E293B] text-black dark:text-[#F1F5F9]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -71,21 +71,21 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             return (
               <div
                 key={notif.id}
-                className="p-3.5 rounded-2xl bg-white/80 dark:bg-black/40 border border-black/10 dark:border-white/10 flex items-start gap-3"
+                className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#111827] border border-black/10 dark:border-[#263449] flex items-start gap-3"
               >
-                <div className="p-2 rounded-xl bg-[#004741]/10 dark:bg-[#004741]/30 text-[#004741] dark:text-[#6ee7b7] shrink-0 mt-0.5">
+                <div className="p-2 rounded-xl bg-[#004741]/10 dark:bg-[#004741]/30 text-[#004741] dark:text-[#38BDF8] shrink-0 mt-0.5">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-1">
-                    <h3 className="text-xs font-bold text-black dark:text-[#F0EDE4]">
+                    <h3 className="text-xs font-bold text-black dark:text-[#F1F5F9]">
                       {notif.title}
                     </h3>
-                    <span className="text-[10px] text-black/50 dark:text-[#F0EDE4]/50">
+                    <span className="text-[10px] text-black/50 dark:text-[#94A3B8]">
                       {notif.time}
                     </span>
                   </div>
-                  <p className="text-xs text-black/70 dark:text-[#F0EDE4]/70 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-black/70 dark:text-[#94A3B8] mt-0.5 leading-relaxed">
                     {notif.desc}
                   </p>
                 </div>

@@ -58,18 +58,18 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-      <div className="w-full max-w-md rounded-3xl bg-[#F0EDE4] dark:bg-[#0c1412] border border-black/20 dark:border-white/20 shadow-2xl p-5 sm:p-7 space-y-4 animate-in fade-in zoom-in-95 duration-200 text-black dark:text-[#F0EDE4]">
+      <div className="w-full max-w-md rounded-3xl bg-[#F0EDE4] dark:bg-[#172033] border border-black/20 dark:border-[#263449] shadow-2xl p-5 sm:p-7 space-y-4 animate-in fade-in zoom-in-95 duration-200 text-black dark:text-[#F1F5F9]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
+        <div className="flex items-center justify-between border-b border-black/10 dark:border-[#263449] pb-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-[#004741] text-[#F0EDE4]">
               <KeyRound className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-black dark:text-[#F0EDE4]">
+              <h2 className="text-base font-bold text-black dark:text-[#F1F5F9]">
                 {language === 'hi' ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}
               </h2>
-              <p className="text-[11px] text-black/60 dark:text-[#F0EDE4]/60">
+              <p className="text-[11px] text-black/60 dark:text-[#94A3B8]">
                 {language === 'hi' ? 'अपना पंजीकृत ईमेल दर्ज करें' : 'Reset your student account credentials'}
               </p>
             </div>
@@ -79,7 +79,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               soundManager.play('button_click');
               onClose();
             }}
-            className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-black dark:text-[#F0EDE4] transition-all"
+            className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-[#1E293B] text-black dark:text-[#F1F5F9] transition-all"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -109,7 +109,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <p className="text-xs text-black/70 dark:text-[#F0EDE4]/70 leading-relaxed">
+            <p className="text-xs text-black/70 dark:text-[#94A3B8] leading-relaxed">
               {language === 'hi'
                 ? 'अपना पंजीकृत ईमेल पता दर्ज करें। हम आपको अपना पासवर्ड सुरक्षित रूप से रीसेट करने के निर्देश भेजेंगे।'
                 : 'Enter the email address associated with your GTU student account. We will send you verification instructions to reset your password.'}
@@ -123,17 +123,17 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             )}
 
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#F0EDE4]/70">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-black/70 dark:text-[#94A3B8]">
                 {language === 'hi' ? 'ईमेल पता' : 'Registered Email Address'}
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#F0EDE4]/40" />
+                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8]/70" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="student@gtu.ac.in"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white dark:bg-[#070b09] border border-black/15 dark:border-white/15 text-xs text-black dark:text-[#F0EDE4] focus:outline-none focus:ring-2 focus:ring-[#004741]"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white dark:bg-[#0B1120] border border-black/15 dark:border-[#263449] text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]"
                   required
                 />
               </div>
@@ -146,7 +146,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   soundManager.play('button_click');
                   onClose();
                 }}
-                className="px-3 py-2 rounded-xl text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/5"
+                className="px-3 py-2 rounded-xl text-xs font-semibold hover:bg-black/5 dark:hover:bg-[#1E293B]"
               >
                 {language === 'hi' ? 'रद्द करें' : 'Cancel'}
               </button>

@@ -123,7 +123,7 @@ function parseInlineWithMath(text: string): React.ReactNode[] {
     // 2. Bold: **...**
     if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
       return (
-        <strong key={`b-${index}`} className="font-bold text-black dark:text-[#F0EDE4]">
+        <strong key={`b-${index}`} className="font-bold text-black dark:text-[#F1F5F9]">
           {parseInlineWithMath(part.slice(2, -2))}
         </strong>
       );
@@ -132,7 +132,7 @@ function parseInlineWithMath(text: string): React.ReactNode[] {
     // 3. Italic: *...*
     if (part.startsWith('*') && part.endsWith('*') && part.length >= 2 && !part.startsWith('**')) {
       return (
-        <em key={`i-${index}`} className="italic text-black/90 dark:text-[#F0EDE4]/90">
+        <em key={`i-${index}`} className="italic text-black/90 dark:text-[#F1F5F9]">
           {parseInlineWithMath(part.slice(1, -1))}
         </em>
       );
@@ -143,7 +143,7 @@ function parseInlineWithMath(text: string): React.ReactNode[] {
       return (
         <code
           key={`c-${index}`}
-          className="px-1.5 py-0.5 mx-0.5 rounded bg-black/5 dark:bg-[#004741]/30 text-[#004741] dark:text-[#6ee7b7] font-mono text-xs font-semibold border border-black/10 dark:border-[#004741]/40"
+          className="px-1.5 py-0.5 mx-0.5 rounded bg-black/5 dark:bg-[#004741]/30 text-[#004741] dark:text-[#38BDF8] font-mono text-xs font-semibold border border-black/10 dark:border-[#004741]/40"
         >
           {part.slice(1, -1)}
         </code>
@@ -186,7 +186,7 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
   };
 
   return (
-    <div className="my-3 rounded-2xl overflow-hidden border border-black/20 dark:border-white/15 bg-black shadow-sm text-[#F0EDE4]">
+    <div className="my-3 rounded-2xl overflow-hidden border border-black/20 dark:border-[#263449] bg-black shadow-sm text-[#F0EDE4]">
       {/* Code Header */}
       <div className="flex items-center justify-between px-3.5 py-1.5 bg-white/10 border-b border-white/10 text-xs font-mono">
         <div className="flex items-center gap-1.5 text-white/70">
@@ -227,7 +227,7 @@ const CodeBlock: React.FC<{ code: string; language: string }> = ({ code, languag
  */
 const TableBlock: React.FC<{ headers: string[]; rows: string[][] }> = ({ headers, rows }) => {
   return (
-    <div className="my-3 overflow-x-auto rounded-2xl border border-black/15 dark:border-white/15 shadow-sm">
+    <div className="my-3 overflow-x-auto rounded-2xl border border-black/15 dark:border-[#263449] shadow-sm">
       <table className="w-full text-left text-xs border-collapse">
         <thead>
           <tr className="bg-[#004741] text-[#F0EDE4]">
@@ -241,7 +241,7 @@ const TableBlock: React.FC<{ headers: string[]; rows: string[][] }> = ({ headers
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-black/10 dark:divide-white/10 bg-white/80 dark:bg-[#0c1412]">
+        <tbody className="divide-y divide-black/10 dark:divide-white/10 bg-white/80 dark:bg-[#172033]">
           {rows.map((row, rIdx) => (
             <tr
               key={rIdx}
@@ -250,7 +250,7 @@ const TableBlock: React.FC<{ headers: string[]; rows: string[][] }> = ({ headers
               {row.map((cell, cIdx) => (
                 <td
                   key={cIdx}
-                  className="px-3.5 py-2 text-black/90 dark:text-[#F0EDE4]/90 border-r last:border-r-0 border-black/5 dark:border-white/5"
+                  className="px-3.5 py-2 text-black/90 dark:text-[#F1F5F9] border-r last:border-r-0 border-black/5 dark:border-[#263449]/60"
                 >
                   {parseInlineWithMath(cell.trim())}
                 </td>
@@ -412,7 +412,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <hr
           key={`hr-${i}`}
-          className="my-4 border-t border-black/10 dark:border-white/10"
+          className="my-4 border-t border-black/10 dark:border-[#263449]"
         />
       );
       continue;
@@ -423,7 +423,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <h1
           key={`h1-${i}`}
-          className="text-xl sm:text-2xl font-black text-black dark:text-[#F0EDE4] mt-5 mb-2 tracking-tight"
+          className="text-xl sm:text-2xl font-black text-black dark:text-[#F1F5F9] mt-5 mb-2 tracking-tight"
         >
           {parseInlineWithMath(line.slice(2))}
         </h1>
@@ -434,9 +434,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <h2
           key={`h2-${i}`}
-          className="text-lg sm:text-xl font-bold text-[#004741] dark:text-[#6ee7b7] mt-4 mb-2 tracking-tight flex items-center gap-2"
+          className="text-lg sm:text-xl font-bold text-[#004741] dark:text-[#38BDF8] mt-4 mb-2 tracking-tight flex items-center gap-2"
         >
-          <span className="w-1.5 h-4 rounded-full bg-[#004741] dark:bg-[#6ee7b7] inline-block" />
+          <span className="w-1.5 h-4 rounded-full bg-[#004741] dark:bg-[#38BDF8] inline-block" />
           <span>{parseInlineWithMath(line.slice(3))}</span>
         </h2>
       );
@@ -446,9 +446,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <h3
           key={`h3-${i}`}
-          className="text-base font-bold text-[#004741] dark:text-[#6ee7b7] mt-3.5 mb-1.5 flex items-center gap-1.5"
+          className="text-base font-bold text-[#004741] dark:text-[#38BDF8] mt-3.5 mb-1.5 flex items-center gap-1.5"
         >
-          <span className="w-1.5 h-3 rounded-full bg-[#004741] dark:bg-[#6ee7b7] inline-block" />
+          <span className="w-1.5 h-3 rounded-full bg-[#004741] dark:bg-[#38BDF8] inline-block" />
           <span>{parseInlineWithMath(line.slice(4))}</span>
         </h3>
       );
@@ -458,7 +458,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <h4
           key={`h4-${i}`}
-          className="text-sm font-bold text-black dark:text-[#F0EDE4] mt-3 mb-1 uppercase tracking-wider"
+          className="text-sm font-bold text-black dark:text-[#F1F5F9] mt-3 mb-1 uppercase tracking-wider"
         >
           {parseInlineWithMath(line.slice(5))}
         </h4>
@@ -471,7 +471,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <blockquote
           key={`bq-${i}`}
-          className="border-l-4 border-[#004741] bg-[#004741]/5 dark:bg-[#004741]/20 pl-3.5 py-2 my-2.5 rounded-r-xl italic text-sm text-black/90 dark:text-[#F0EDE4]/90"
+          className="border-l-4 border-[#004741] bg-[#004741]/5 dark:bg-[#004741]/20 pl-3.5 py-2 my-2.5 rounded-r-xl italic text-sm text-black/90 dark:text-[#F1F5F9]"
         >
           {parseInlineWithMath(line.slice(2))}
         </blockquote>
@@ -485,9 +485,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <div
           key={`bullet-${i}`}
-          className="flex items-start gap-2.5 my-1 text-sm leading-relaxed text-black/90 dark:text-[#F0EDE4]/90"
+          className="flex items-start gap-2.5 my-1 text-sm leading-relaxed text-black/90 dark:text-[#F1F5F9]"
         >
-          <span className="text-[#004741] dark:text-[#6ee7b7] font-bold mt-1 text-xs select-none">
+          <span className="text-[#004741] dark:text-[#38BDF8] font-bold mt-1 text-xs select-none">
             •
           </span>
           <div className="flex-1">{parseInlineWithMath(bulletText)}</div>
@@ -504,9 +504,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       elements.push(
         <div
           key={`num-${i}`}
-          className="flex items-start gap-2.5 my-1 text-sm leading-relaxed text-black/90 dark:text-[#F0EDE4]/90"
+          className="flex items-start gap-2.5 my-1 text-sm leading-relaxed text-black/90 dark:text-[#F1F5F9]"
         >
-          <span className="font-bold text-[#004741] dark:text-[#6ee7b7] text-xs min-w-5 pt-0.5 select-none">
+          <span className="font-bold text-[#004741] dark:text-[#38BDF8] text-xs min-w-5 pt-0.5 select-none">
             {num}.
           </span>
           <div className="flex-1">{parseInlineWithMath(rest)}</div>
@@ -523,7 +523,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
     // 10. Standard Paragraph
     elements.push(
-      <p key={`p-${i}`} className="text-sm leading-relaxed text-black/90 dark:text-[#F0EDE4]/90 my-1.5">
+      <p key={`p-${i}`} className="text-sm leading-relaxed text-black/90 dark:text-[#F1F5F9] my-1.5">
         {parseInlineWithMath(line)}
       </p>
     );
