@@ -18,7 +18,7 @@ export interface DatabaseInitResult {
 }
 
 const OWNER_ADMIN_EMAIL = "Pathanfaizalam142@gmail.com";
-const OWNER_ADMIN_SCRYPT_HASH = "c4d5e6f7a8b90123456789abcdef0123:892453f270ca848b89d479926905c0a1de3fcc1111874093b2bc7610a198ead3bd01e9496f33ae054ae6f115d394e7bf75606975394f0d43b97928e62c7a2a7b";
+const OWNER_ADMIN_SCRYPT_HASH = "c4d5e6f7a8b90123456789abcdef0123:e8b75023be82432241df6dcf39d45d76dd8f45b5779b5c8c8c0c5b0f30c1483e2778d9c01ce79ae05a8bc5f7f2e87d0adeb88b7a52db0241cff87e1d2e8f5d46";
 
 /**
  * Initializes the canonical SQLite database (`studymate.db`), applies pending migrations
