@@ -279,7 +279,7 @@ export const ExamAnswerView: React.FC<ExamAnswerViewProps> = ({
             <span className="px-2.5 py-1 rounded-lg bg-[#004741]/10 text-[#004741] dark:text-[#38BDF8] text-[11px] font-bold">
               Sem {curriculumMatch.semester}
             </span>
-            <span className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 text-[11px] font-mono font-bold">
+            <span className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-black/70 dark:text-[#94A3B8] text-[11px] font-mono font-bold">
               {curriculumMatch.code}
             </span>
           </div>
@@ -463,7 +463,7 @@ export const ExamAnswerView: React.FC<ExamAnswerViewProps> = ({
                 {activeSubjectName}
               </span>
               {curriculumMatch && (
-                <span className="text-[11px] font-mono text-black/50 dark:text-white/50">
+                <span className="text-[11px] font-mono text-black/50 dark:text-[#94A3B8]/70">
                   [{curriculumMatch.code}]
                 </span>
               )}
@@ -514,14 +514,14 @@ export const ExamAnswerView: React.FC<ExamAnswerViewProps> = ({
           {/* Bottom Actions */}
           {onNavigate && (
             <div className="pt-4 border-t border-black/10 dark:border-[#263449] flex flex-wrap items-center justify-between gap-2.5">
-              <span className="text-xs text-black/60 dark:text-white/60">
+              <span className="text-xs text-black/60 dark:text-[#94A3B8]">
                 {isHi ? 'संबंधित अध्ययन विकल्प:' : 'Related Academic Actions:'}
               </span>
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => onNavigate('quiz', undefined, activeSubjectName)}
-                  className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-[#F1F5F9] text-xs font-bold flex items-center gap-1.5 transition-all"
                 >
                   <Award className="w-3.5 h-3.5 text-[#004741] dark:text-[#38BDF8]" />
                   <span>{isHi ? 'इस विषय के MCQs अभ्यास करें' : 'Practice MCQs for Subject'}</span>
@@ -529,7 +529,7 @@ export const ExamAnswerView: React.FC<ExamAnswerViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onNavigate('gtu_bca', undefined, activeSubjectName)}
-                  className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-[#F1F5F9] text-xs font-bold flex items-center gap-1.5 transition-all"
                 >
                   <BookOpen className="w-3.5 h-3.5 text-[#004741] dark:text-[#38BDF8]" />
                   <span>{isHi ? 'GTU BCA विषय पर जाएं' : 'View in GTU BCA'}</span>

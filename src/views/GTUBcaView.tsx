@@ -586,7 +586,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
           </div>
 
           {searchResults.length === 0 ? (
-            <p className="text-xs text-black/60 dark:text-white/60 py-4 text-center">
+            <p className="text-xs text-black/60 dark:text-[#94A3B8] py-4 text-center">
               {isHi
                 ? 'कोई विषय या टॉपिक नहीं मिला।'
                 : 'No matching GTU BCA subject or topic found.'}
@@ -715,7 +715,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                 <div className="text-sm font-black text-[#004741] dark:text-emerald-300">
                   {currentSemData.subjects.length}
                 </div>
-                <div className="text-[10px] font-bold text-black/60 dark:text-white/60 uppercase">
+                <div className="text-[10px] font-bold text-black/60 dark:text-[#94A3B8] uppercase">
                   Subjects
                 </div>
               </div>
@@ -723,7 +723,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                 <div className="text-sm font-black text-amber-700 dark:text-amber-300">
                   {currentSemData.subjects.reduce((acc, s) => acc + (s.credits || 4), 0)}
                 </div>
-                <div className="text-[10px] font-bold text-black/60 dark:text-white/60 uppercase">
+                <div className="text-[10px] font-bold text-black/60 dark:text-[#94A3B8] uppercase">
                   Credits
                 </div>
               </div>
@@ -741,7 +741,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[11px] font-mono font-bold text-black/80 dark:text-white/90">
+                    <span className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[11px] font-mono font-bold text-black/80 dark:text-[#F1F5F9]">
                       GTU #{subj.code}
                     </span>
                     <span
@@ -827,7 +827,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                   <span className="px-2.5 py-0.5 rounded-md bg-[#004741] text-white text-[11px] font-mono font-bold">
                     GTU Code: {selectedSubject.code}
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-md bg-black/10 dark:bg-white/10 text-xs font-bold text-black dark:text-white">
+                  <span className="px-2.5 py-0.5 rounded-md bg-black/10 dark:bg-white/10 text-xs font-bold text-black dark:text-[#F1F5F9]">
                     Semester {selectedSem}
                   </span>
                   <span className="px-2.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs font-bold">
@@ -871,7 +871,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                     soundManager.play('button_click');
                     onNavigate('exam_mode', '', selectedSubject.name);
                   }}
-                  className="px-4 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-black dark:text-white text-xs font-bold flex items-center gap-1.5 border border-black/15 dark:border-[#263449] transition-all"
+                  className="px-4 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-black dark:text-[#F1F5F9] text-xs font-bold flex items-center gap-1.5 border border-black/15 dark:border-[#263449] transition-all"
                 >
                   <FileText className="w-4 h-4 text-[#004741] dark:text-emerald-400" />
                   <span>{isHi ? 'परीक्षा उत्तर जनरेटर' : 'Exam Answer Mode'}</span>
@@ -913,13 +913,13 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-5 rounded-2xl bg-white/90 dark:bg-[#172033] border border-black/10 dark:border-[#263449] space-y-2">
-                  <div className="text-xs font-bold text-black/55 dark:text-white/55 uppercase">
+                  <div className="text-xs font-bold text-black/55 dark:text-[#94A3B8] uppercase">
                     {isHi ? 'इकाइयाँ और पाठ्यक्रम' : 'Syllabus Structure'}
                   </div>
                   <div className="text-2xl font-display font-black text-black dark:text-[#F1F5F9]">
                     {selectedSubject.units.length} Units
                   </div>
-                  <p className="text-xs text-black/65 dark:text-white/65">
+                  <p className="text-xs text-black/65 dark:text-[#94A3B8]">
                     {selectedSubject.units.reduce((acc, u) => acc + u.topics.length, 0)} core GTU
                     topics mapped with exam weightage.
                   </p>
@@ -934,14 +934,14 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white/90 dark:bg-[#172033] border border-black/10 dark:border-[#263449] space-y-2">
-                  <div className="text-xs font-bold text-black/55 dark:text-white/55 uppercase">
+                  <div className="text-xs font-bold text-black/55 dark:text-[#94A3B8] uppercase">
                     {isHi ? 'अध्ययन सामग्री और महत्वपूर्ण प्रश्न' : 'Study Materials & Questions'}
                   </div>
                   <div className="text-2xl font-display font-black text-black dark:text-[#F1F5F9]">
                     {subjectSqliteMaterials.length + selectedSubject.units.length} Notes ·{' '}
                     {subjectImportantQuestions.length} Qs
                   </div>
-                  <p className="text-xs text-black/65 dark:text-white/65">
+                  <p className="text-xs text-black/65 dark:text-[#94A3B8]">
                     Unit study notes, topic summaries, and GTU exam questions.
                   </p>
                   <button
@@ -955,13 +955,13 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white/90 dark:bg-[#172033] border border-black/10 dark:border-[#263449] space-y-2">
-                  <div className="text-xs font-bold text-black/55 dark:text-white/55 uppercase">
+                  <div className="text-xs font-bold text-black/55 dark:text-[#94A3B8] uppercase">
                     {isHi ? 'प्रश्न पत्र और अभ्यास' : 'GTU Papers & Practice'}
                   </div>
                   <div className="text-2xl font-display font-black text-black dark:text-[#F1F5F9]">
                     70 Marks GTU Pattern
                   </div>
-                  <p className="text-xs text-black/65 dark:text-white/65">
+                  <p className="text-xs text-black/65 dark:text-[#94A3B8]">
                     Official university question papers and subject-isolated MCQ practice.
                   </p>
                   <div className="flex items-center gap-3 pt-1">
@@ -1008,11 +1008,11 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                         <div className="text-xs sm:text-sm font-bold text-black dark:text-[#F1F5F9] truncate mt-0.5">
                           {unit.unitName}
                         </div>
-                        <div className="text-[11px] text-black/55 dark:text-white/55">
+                        <div className="text-[11px] text-black/55 dark:text-[#94A3B8]">
                           {unit.topics.length} {isHi ? 'टॉपिक्स' : 'topics'}
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-black/40 dark:text-white/40 shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-black/40 dark:text-[#94A3B8]/60 shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -1055,13 +1055,13 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="hidden sm:inline-block px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[11px] font-bold text-black/70 dark:text-white/70">
+                        <span className="hidden sm:inline-block px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[11px] font-bold text-black/70 dark:text-[#94A3B8]">
                           {unit.weightage || '25%'}
                         </span>
                         {isExpanded ? (
-                          <ChevronDown className="w-5 h-5 text-black/60 dark:text-white/60" />
+                          <ChevronDown className="w-5 h-5 text-black/60 dark:text-[#94A3B8]" />
                         ) : (
-                          <ChevronRight className="w-5 h-5 text-black/60 dark:text-white/60" />
+                          <ChevronRight className="w-5 h-5 text-black/60 dark:text-[#94A3B8]" />
                         )}
                       </div>
                     </button>
@@ -1123,7 +1123,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                                       selectedSubject.name
                                     );
                                   }}
-                                  className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-black dark:text-white text-[11px] font-bold transition-colors"
+                                  className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-black dark:text-[#F1F5F9] text-[11px] font-bold transition-colors"
                                 >
                                   {isHi ? '7M उत्तर' : '7M Exam Answer'}
                                 </button>
@@ -1168,7 +1168,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                         selectedUnitFilter === 'all'
                           ? 'bg-[#004741] text-white shadow-xs'
-                          : 'bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 hover:bg-black/10'
+                          : 'bg-black/5 dark:bg-white/10 text-black/70 dark:text-[#94A3B8] hover:bg-black/10'
                       }`}
                     >
                       {isHi ? 'सभी इकाइयाँ' : 'All Units'}
@@ -1181,7 +1181,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
                           selectedUnitFilter === u.unitNumber
                             ? 'bg-[#004741] text-white shadow-xs'
-                            : 'bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 hover:bg-black/10'
+                            : 'bg-black/5 dark:bg-white/10 text-black/70 dark:text-[#94A3B8] hover:bg-black/10'
                         }`}
                       >
                         Unit {u.unitNumber}
@@ -1210,7 +1210,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                               {mat.materialType || 'notes'}
                             </span>
                             {mat.unitNumber && (
-                              <span className="text-[11px] font-mono text-black/55 dark:text-white/55">
+                              <span className="text-[11px] font-mono text-black/55 dark:text-[#94A3B8]">
                                 Unit {mat.unitNumber}
                               </span>
                             )}
@@ -1269,7 +1269,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                                 subject: selectedSubject.name,
                               });
                             }}
-                            className="px-3 py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-white text-xs font-bold transition-colors flex items-center gap-1.5"
+                            className="px-3 py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-[#F1F5F9] text-xs font-bold transition-colors flex items-center gap-1.5"
                           >
                             <Bookmark className="w-3.5 h-3.5" />
                             <span>{isHi ? 'सहेजें' : 'Save to Library'}</span>
@@ -1322,7 +1322,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                           <span className="px-2.5 py-0.5 rounded-md bg-[#004741]/10 dark:bg-emerald-950 text-[#004741] dark:text-emerald-300 text-[10px] font-black uppercase tracking-wider">
                             Unit 0{unit.unitNumber} Notes
                           </span>
-                          <span className="text-[11px] font-semibold text-black/60 dark:text-white/60">
+                          <span className="text-[11px] font-semibold text-black/60 dark:text-[#94A3B8]">
                             Weightage: {unit.weightage || '25%'}
                           </span>
                         </div>
@@ -1378,7 +1378,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                           selectedMarksFilter === m
                             ? 'bg-[#004741] text-white'
-                            : 'bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70'
+                            : 'bg-black/5 dark:bg-white/10 text-black/70 dark:text-[#94A3B8]'
                         }`}
                       >
                         {m === 'all' ? (isHi ? 'सभी (All)' : 'All Marks') : `${m} Marks`}
@@ -1404,7 +1404,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                               <span className="px-2.5 py-0.5 rounded-md bg-[#004741] text-white text-[10px] font-black uppercase">
                                 {iq.marks} Marks
                               </span>
-                              <span className="px-2.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-[11px] font-bold text-black/70 dark:text-white/70">
+                              <span className="px-2.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-[11px] font-bold text-black/70 dark:text-[#94A3B8]">
                                 Unit {iq.unit}
                               </span>
                               <span className="px-2.5 py-0.5 rounded-md bg-amber-500/15 text-amber-800 dark:text-amber-300 text-[10px] font-black">
@@ -1429,7 +1429,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                               className={`p-2.5 rounded-xl border transition-colors ${
                                 isBookmarked
                                   ? 'bg-amber-500 text-black border-amber-600'
-                                  : 'bg-black/5 dark:bg-white/5 text-black/60 dark:text-white/60 border-black/10 dark:border-[#263449]'
+                                  : 'bg-black/5 dark:bg-white/5 text-black/60 dark:text-[#94A3B8] border-black/10 dark:border-[#263449]'
                               }`}
                             >
                               <Bookmark className="w-4 h-4 fill-current" />
@@ -1477,10 +1477,10 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                             ? 'आधिकारिक GTU प्रश्न पत्र स्थिति'
                             : 'Official GTU Question Paper Status'}
                         </span>
-                        <h3 className="text-base font-display font-black text-black dark:text-white">
+                        <h3 className="text-base font-display font-black text-black dark:text-[#F1F5F9]">
                           {selectedSubject.name} (GTU Code: {selectedSubject.code})
                         </h3>
-                        <p className="text-xs text-black/65 dark:text-white/65">
+                        <p className="text-xs text-black/65 dark:text-[#94A3B8]">
                           {isVerifiedAvailable
                             ? isHi
                               ? 'इस विषय के लिए सत्यापित GTU प्रश्न पत्र PDF देखने और डाउनलोड करने के लिए उपलब्ध है।'
@@ -1518,7 +1518,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                             <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 text-[10px] font-black uppercase">
                               {activePaper.exam} {activePaper.year} • PDF Available
                             </span>
-                            <span className="text-xs font-mono font-bold text-black/60 dark:text-white/60">
+                            <span className="text-xs font-mono font-bold text-black/60 dark:text-[#94A3B8]">
                               70 Marks • 2.5 Hours
                             </span>
                           </div>
@@ -1526,7 +1526,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                             GTU {activePaper.exam} {activePaper.year} Official Question Paper —{' '}
                             {selectedSubject.shortName || selectedSubject.name} ({selectedSubject.code})
                           </h4>
-                          <p className="text-xs text-black/65 dark:text-white/65">
+                          <p className="text-xs text-black/65 dark:text-[#94A3B8]">
                             {activePaper.paperContent?.sections?.length || 5} Structured GTU
                             Sections (Q.1 to Q.5) • Subject Code Verified: {activePaper.subjectCode}
                           </p>
@@ -1549,7 +1549,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                               soundManager.play('button_click');
                               paperService.downloadPaperPDF(activePaper);
                             }}
-                            className="px-3.5 py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-black dark:text-white text-xs font-bold transition-colors flex items-center gap-1.5"
+                            className="px-3.5 py-2 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-black dark:text-[#F1F5F9] text-xs font-bold transition-colors flex items-center gap-1.5"
                           >
                             <Download className="w-3.5 h-3.5" />
                             <span>{isHi ? 'PDF डाउनलोड करें' : 'Download PDF'}</span>
@@ -1564,7 +1564,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                         <h4 className="text-sm font-bold text-black dark:text-[#F1F5F9]">
                           {selectedSubject.name} ({selectedSubject.code})
                         </h4>
-                        <p className="text-xs text-black/60 dark:text-white/60 max-w-md mx-auto">
+                        <p className="text-xs text-black/60 dark:text-[#94A3B8] max-w-md mx-auto">
                           {isHi
                             ? 'इस विषय के लिए सत्यापित GTU प्रश्न पत्र अभी उपलब्ध नहीं है। आप महत्वपूर्ण प्रश्नों और मॉडल उत्तरों का अभ्यास कर सकते हैं।'
                             : 'No verified GTU paper PDF is mapped to this subject code yet. Use the Materials or Practice tab to prepare with important GTU questions.'}
@@ -1627,7 +1627,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                           `Explain the core architecture and fundamental principles of ${selectedSubject.name}.`;
                         onNavigate('exam_mode', firstExamQ, selectedSubject.name);
                       }}
-                      className="px-4 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-white text-xs font-bold flex items-center gap-2 border border-black/10 dark:border-[#263449] transition-all"
+                      className="px-4 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 text-black dark:text-[#F1F5F9] text-xs font-bold flex items-center gap-2 border border-black/10 dark:border-[#263449] transition-all"
                     >
                       <FileCheck2 className="w-4 h-4 text-[#004741] dark:text-emerald-400" />
                       <span>{isHi ? 'परीक्षा उत्तर जनरेटर' : 'Exam Answer Generator'}</span>
@@ -1637,7 +1637,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
 
                 {/* Unit-by-Unit MCQ & Exam Practice Launchers */}
                 <div className="pt-3 border-t border-black/10 dark:border-[#263449] space-y-2.5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-black/55 dark:text-white/55">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-black/55 dark:text-[#94A3B8]">
                     {isHi ? 'इकाई-वार अभ्यास चुनें' : 'Practice by Unit'}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1653,7 +1653,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                           <div className="text-sm font-bold text-black dark:text-[#F1F5F9] mt-0.5">
                             {unit.unitName}
                           </div>
-                          <div className="text-[11px] text-black/55 dark:text-white/55 mt-0.5">
+                          <div className="text-[11px] text-black/55 dark:text-[#94A3B8] mt-0.5">
                             {unit.topics.map((t) => t.title).slice(0, 3).join(' • ')}
                           </div>
                         </div>
@@ -1678,7 +1678,7 @@ export const GTUBcaView: React.FC<GTUBcaViewProps> = ({
                                 `Explain ${unit.topics?.[0]?.title || unit.unitName} in detail with suitable examples.`;
                               onNavigate('exam_mode', unitExamQ, selectedSubject.name);
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/10 text-black dark:text-white text-[11px] font-bold hover:bg-black/10 transition-colors"
+                            className="px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/10 text-black dark:text-[#F1F5F9] text-[11px] font-bold hover:bg-black/10 transition-colors"
                           >
                             {isHi ? 'मॉडल उत्तर' : 'Practice 7M Answer'}
                           </button>

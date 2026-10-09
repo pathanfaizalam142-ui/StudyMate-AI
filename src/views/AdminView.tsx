@@ -47,21 +47,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   const [activeSubTab, setActiveSubTab] = useState<AdminSectionTab>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Strict Backend-Verified Admin Session State (no hardcoded credentials)
-  const [adminUser, setAdminUser] = useState<AdminSessionUser | null>(() => {
-    try {
-      const saved = localStorage.getItem('studymate_admin_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [adminToken, setAdminToken] = useState<string | null>(() => {
-    return localStorage.getItem('studymate_admin_token');
-  });
-  const [verifyingSession, setVerifyingSession] = useState<boolean>(() => {
-    return Boolean(localStorage.getItem('studymate_admin_token'));
-  });
+  // Strict Backend-Verified Admin Session State (no hardcoded credentials; scoped to browser session via sessionStorage + HttpOnly session cookie)
+  const [adminUser, setAdminUser] = useState<AdminSessionUser | null>(null);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [verifyingSession, setVerifyingSession] = useState<boolean>(true);
 
   // Login Form State (strictly empty initial values — never hardcode secrets)
   const [loginEmail, setLoginEmail] = useState('');
@@ -123,36 +112,46 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   useEffect(() => {
     let active = true;
     const checkSession = async () => {
-      if (!adminToken) {
-        if (active) {
-          setAdminUser(null);
-          setVerifyingSession(false);
-          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-            window.history.replaceState({}, '', '/admin/login');
-          }
-        }
-        return;
+      // Clean legacy localStorage traces
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('studymate_admin_user');
+        localStorage.removeItem('studymate_admin_token');
       }
+
+      // Check sessionStorage token first
+      const storedToken =
+        typeof window !== 'undefined'
+          ? sessionStorage.getItem('studymate_admin_token')
+          : null;
+
       try {
-        const res = await api.adminMe(adminToken);
+        // Send storedToken if available (or rely on HttpOnly session cookie if browser sent it)
+        const res = await api.adminMe(storedToken);
         if (active && res?.user?.role === 'admin') {
           setAdminUser(res.user);
-          localStorage.setItem('studymate_admin_user', JSON.stringify(res.user));
+          // Keep adminToken in state
+          if (storedToken) {
+            setAdminToken(storedToken);
+            sessionStorage.setItem('studymate_admin_user', JSON.stringify(res.user));
+          }
           if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
             window.history.replaceState({}, '', '/admin');
           }
         } else if (active) {
           setAdminUser(null);
           setAdminToken(null);
-          localStorage.removeItem('studymate_admin_token');
-          localStorage.removeItem('studymate_admin_user');
+          sessionStorage.removeItem('studymate_admin_token');
+          sessionStorage.removeItem('studymate_admin_user');
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+            window.history.replaceState({}, '', '/admin/login');
+          }
         }
       } catch {
         if (active) {
           setAdminUser(null);
           setAdminToken(null);
-          localStorage.removeItem('studymate_admin_token');
-          localStorage.removeItem('studymate_admin_user');
+          sessionStorage.removeItem('studymate_admin_token');
+          sessionStorage.removeItem('studymate_admin_user');
           if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
             window.history.replaceState({}, '', '/admin/login');
           }
@@ -161,11 +160,12 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
         if (active) setVerifyingSession(false);
       }
     };
+
     checkSession();
     return () => {
       active = false;
     };
-  }, [adminToken]);
+  }, []);
 
   const loadCoreData = useCallback(async () => {
     if (!adminToken) return;
@@ -261,8 +261,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
       const res = await api.adminLogin(loginEmail.trim(), loginPassword);
       setAdminUser(res.user);
       setAdminToken(res.token);
-      localStorage.setItem('studymate_admin_user', JSON.stringify(res.user));
-      localStorage.setItem('studymate_admin_token', res.token);
+      sessionStorage.setItem('studymate_admin_user', JSON.stringify(res.user));
+      sessionStorage.setItem('studymate_admin_token', res.token);
+      localStorage.removeItem('studymate_admin_user');
+      localStorage.removeItem('studymate_admin_token');
       setLoginPassword('');
       soundManager.play('save');
       if (typeof window !== 'undefined') {
@@ -281,6 +283,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
     await api.adminLogout(adminToken);
     setAdminUser(null);
     setAdminToken(null);
+    sessionStorage.removeItem('studymate_admin_user');
+    sessionStorage.removeItem('studymate_admin_token');
     localStorage.removeItem('studymate_admin_user');
     localStorage.removeItem('studymate_admin_token');
     soundManager.play('button_click');
@@ -666,15 +670,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                         <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100 dark:divide-stone-800/60">
+                    <tbody className="divide-y divide-stone-100 dark:divide-[#263449]">
                       {papers.map((p, idx) => (
                         <tr
                           key={p.paperId || `${p.subjectId}-${idx}`}
-                          className="hover:bg-stone-50/80 dark:hover:bg-stone-900/40"
+                          className="hover:bg-stone-50/80 dark:hover:bg-[#1E293B]/60"
                         >
                           <td className="py-3 px-4 font-bold">Sem {p.semester}</td>
                           <td className="py-3 px-4">
-                            <div className="font-bold text-stone-900 dark:text-white">
+                            <div className="font-bold text-stone-900 dark:text-[#F1F5F9]">
                               {p.subjectCode} — {p.subjectName}
                             </div>
                             <div className="font-mono text-[10px] text-stone-400">{p.subjectId}</div>
@@ -692,7 +696,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                                   ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                                   : p.availabilityStatus === 'archived'
                                   ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                  : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-[#94A3B8]'
+                                  : 'bg-stone-200 dark:bg-[#1E293B] text-stone-600 dark:text-[#94A3B8]'
                               }`}
                             >
                               {p.availabilityStatus}
@@ -716,7 +720,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                                     setEditingPaperRecord(p);
                                     setPaperModalMode('edit');
                                   }}
-                                  className="p-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 text-stone-700 dark:text-[#94A3B8]"
+                                  className="p-1.5 rounded-lg bg-stone-100 dark:bg-[#1E293B] hover:bg-stone-200 text-stone-700 dark:text-[#94A3B8]"
                                   title="Edit Paper Metadata"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
@@ -828,7 +832,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                         <span className="font-bold">
                           {pq.sectionTitle} / {pq.questionNumber}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-stone-200 dark:bg-[#1E293B] font-bold text-[10px]">
                           {pq.marks} Marks
                         </span>
                         {pq.isAlternative && (
@@ -840,7 +844,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                           paper.subject_id == question.subject_id ({pq.subjectId})
                         </span>
                       </div>
-                      <p className="text-stone-800 dark:text-stone-200 font-medium">
+                      <p className="text-stone-800 dark:text-[#F1F5F9] font-medium">
                         {pq.questionText}
                       </p>
                     </div>
@@ -932,7 +936,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                         <span className="px-2 py-0.5 rounded bg-[#004741] text-white font-bold text-[10px]">
                           Sem {q.semester} • {q.subjectCode}
                         </span>
-                        <span className="px-2 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-bold text-[10px] uppercase">
+                        <span className="px-2 py-0.5 rounded bg-stone-200 dark:bg-[#1E293B] font-bold text-[10px] uppercase">
                           {q.difficulty} • {q.language}
                         </span>
                         <span className="font-mono text-[10px] text-stone-400">{q.id}</span>
@@ -941,7 +945,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEditMcqModal(q)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-stone-200/80 dark:bg-stone-800 hover:bg-stone-300 font-bold text-[11px]"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-stone-200/80 dark:bg-[#1E293B] hover:bg-stone-300 font-bold text-[11px]"
                         >
                           <Edit3 className="w-3 h-3" />
                           <span>Edit</span>
@@ -956,7 +960,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                       </div>
                     </div>
 
-                    <p className="font-bold text-stone-900 dark:text-white">{q.questionText}</p>
+                    <p className="font-bold text-stone-900 dark:text-[#F1F5F9]">{q.questionText}</p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {(q.options || []).map((opt: string, i: number) => (
@@ -1159,7 +1163,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
                 <button
                   type="button"
                   onClick={() => setIsMcqModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-stone-200 dark:bg-stone-800 font-bold"
+                  className="px-4 py-2 rounded-xl bg-stone-200 dark:bg-[#1E293B] font-bold"
                 >
                   Cancel
                 </button>

@@ -214,7 +214,7 @@ export const SavedAnswersView: React.FC<SavedAnswersViewProps> = ({
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white p-1"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-black/40 dark:text-[#94A3B8] hover:text-black dark:hover:text-[#F1F5F9] p-1"
             >
               <X className="w-3.5 h-3.5" />
             </button>

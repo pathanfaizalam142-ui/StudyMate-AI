@@ -573,6 +573,44 @@ app.get("/api/papers/:id", (req, res) => {
 // PHASE 3 & PHASE 4: FULL ADMIN CONTENT MANAGEMENT API (100% SQLite-Driven)
 // ============================================================================
 
+const ADMIN_COOKIE_NAME = "studymate_admin_session";
+
+function parseCookie(req: express.Request, cookieName: string): string | null {
+  const cookieHeader = req.headers.cookie;
+  if (!cookieHeader || typeof cookieHeader !== "string") return null;
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`));
+  return match ? decodeURIComponent(match[1].trim()) : null;
+}
+
+function setAdminSessionCookie(req: express.Request, res: express.Response, token: string) {
+  const isHttps =
+    req.secure ||
+    req.headers["x-forwarded-proto"] === "https" ||
+    process.env.NODE_ENV === "production";
+  
+  // Strict non-persistent session cookie: NO max-age and NO expires
+  // Browser destroys session cookie when the browser session ends.
+  // HttpOnly prevents JavaScript access, SameSite=Lax prevents CSRF, Secure when on HTTPS.
+  let cookieHeader = `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax`;
+  if (isHttps) {
+    cookieHeader += "; Secure";
+  }
+  res.setHeader("Set-Cookie", cookieHeader);
+}
+
+function clearAdminSessionCookie(req: express.Request, res: express.Response) {
+  const isHttps =
+    req.secure ||
+    req.headers["x-forwarded-proto"] === "https" ||
+    process.env.NODE_ENV === "production";
+
+  let cookieHeader = `${ADMIN_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`;
+  if (isHttps) {
+    cookieHeader += "; Secure";
+  }
+  res.setHeader("Set-Cookie", cookieHeader);
+}
+
 function extractBearerToken(req: express.Request): string | null {
   const authHeader = req.headers.authorization;
   if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
@@ -581,6 +619,10 @@ function extractBearerToken(req: express.Request): string | null {
   const customToken = req.headers["x-admin-token"];
   if (typeof customToken === "string" && customToken.trim()) {
     return customToken.trim();
+  }
+  const cookieToken = parseCookie(req, ADMIN_COOKIE_NAME);
+  if (typeof cookieToken === "string" && cookieToken.trim()) {
+    return cookieToken.trim();
   }
   return null;
 }
@@ -596,6 +638,11 @@ function adminAccessGuard(
   res: express.Response,
   next: express.NextFunction
 ) {
+  // Prevent browser back/forward or proxy caching of protected administrative payloads
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   const explicitRole = String(
     req.headers["x-user-role"] || req.headers["x-admin-role"] || req.body?.role || ""
   )
@@ -674,6 +721,13 @@ const handleAdminLogin = (req: express.Request, res: express.Response) => {
       return;
     }
 
+    // Set non-persistent HttpOnly session cookie (cleared when browser session ends)
+    setAdminSessionCookie(req, res, authResult.token);
+
+    // Prevent caching of authentication responses
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+
     res.json({
       success: true,
       token: authResult.token,
@@ -689,6 +743,10 @@ app.post("/api/admin/auth/login", handleAdminLogin);
 app.post("/api/admin/login", handleAdminLogin);
 
 const handleAdminMe = (req: express.Request, res: express.Response) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   const token = extractBearerToken(req);
   if (!token) {
     res.status(401).json({ authenticated: false, error: "Missing admin session token." });
@@ -710,8 +768,13 @@ app.get("/api/admin/auth/me", handleAdminMe);
 app.get("/api/admin/me", handleAdminMe);
 
 const handleAdminLogout = (req: express.Request, res: express.Response) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   const token = extractBearerToken(req);
   const revoked = token ? revokeAdminSessionToken(db, token) : false;
+  clearAdminSessionCookie(req, res);
   res.json({ success: true, revoked });
 };
 

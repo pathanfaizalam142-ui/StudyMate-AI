@@ -429,7 +429,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
               <span className="px-2.5 py-1 rounded-lg bg-[#004741]/10 text-[#004741] dark:text-[#38BDF8] text-[11px] font-bold">
                 Sem {curriculumMatch.semester}
               </span>
-              <span className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-black/70 dark:text-white/70 text-[11px] font-mono font-bold">
+              <span className="px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-black/70 dark:text-[#94A3B8] text-[11px] font-mono font-bold">
                 {curriculumMatch.code}
               </span>
             </div>
@@ -639,7 +639,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
               <span className="text-xs font-bold text-[#004741] dark:text-[#38BDF8] uppercase tracking-wider">
                 {selectedSubject}
               </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-black/60 dark:text-white/60 uppercase">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-black/60 dark:text-[#94A3B8] uppercase">
                 {difficulty}
               </span>
             </div>

@@ -574,7 +574,7 @@ export const QuestionPapersView: React.FC<QuestionPapersViewProps> = ({
                         <span>PDF Available</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-600 dark:text-slate-400 text-[10px] font-medium">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-600 dark:text-[#94A3B8] text-[10px] font-medium">
                         <Clock className="w-3 h-3" />
                         <span>PDF not available</span>
                       </span>
@@ -660,7 +660,7 @@ export const QuestionPapersView: React.FC<QuestionPapersViewProps> = ({
                       disabled={!record.isAvailable || isDownloadingThis}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 ${
                         !record.isAvailable
-                          ? 'bg-black/10 dark:bg-white/10 text-black/40 dark:text-white/40 cursor-not-allowed'
+                          ? 'bg-black/10 dark:bg-white/10 text-black/40 dark:text-[#94A3B8]/60 cursor-not-allowed'
                           : isDownloadedThis
                           ? 'bg-emerald-600 text-white'
                           : 'bg-[#004741] hover:bg-[#003833] text-[#F0EDE4]'

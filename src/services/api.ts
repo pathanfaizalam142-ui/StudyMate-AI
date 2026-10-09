@@ -274,6 +274,8 @@ export const api = {
     const res = await fetch('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      cache: 'no-store',
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
@@ -289,13 +291,19 @@ export const api = {
     await fetch('/api/admin/auth/logout', {
       method: 'POST',
       headers,
+      credentials: 'include',
+      cache: 'no-store',
     });
   },
 
   async adminMe(token?: string | null): Promise<any> {
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch('/api/admin/auth/me', { headers });
+    const res = await fetch('/api/admin/auth/me', {
+      headers,
+      credentials: 'include',
+      cache: 'no-store',
+    });
     const data = await res.json();
     if (!res.ok || !data?.authenticated) {
       throw new Error(data?.error || `Admin session check failed (${res.status})`);
