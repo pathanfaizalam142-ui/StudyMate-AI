@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
+  Users,
 } from 'lucide-react';
 import { AdminSectionTab } from './AdminSidebar';
 import { soundManager } from '../../services/soundManager';
@@ -91,6 +92,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       action: 'subjects' as AdminSectionTab,
     },
     {
+      label: 'Student Accounts',
+      value: stats.totalStudents ?? 0,
+      sub: `${stats.activeStudents ?? 0} active`,
+      icon: Users,
+      action: 'students' as AdminSectionTab,
+    },
+    {
       label: 'Quarantined Legacy',
       value: stats.quarantinedCount || 0,
       sub: 'Non-canonical C++ isolated',
@@ -106,7 +114,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <h2 className="text-xs font-bold uppercase tracking-wider text-black/50 dark:text-[#94A3B8]">
           Database Metrics & Overview
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {kpis.map((card, i) => {
             const Icon = card.icon;
             return (

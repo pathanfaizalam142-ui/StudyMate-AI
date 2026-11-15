@@ -660,13 +660,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400">
-                  {t.clearData || (isHi ? 'सभी स्थानीय डेटा रीसेट करें' : 'Reset All Local Data')}
+                  {t.clearData || (isHi ? 'स्थानीय अध्ययन डेटा साफ़ करें' : 'Reset Local Study Data')}
                 </h3>
                 <p className="text-[11px] text-black/50 dark:text-[#94A3B8]">
-                  {t.clearDataDesc ||
-                    (isHi
-                      ? 'स्थानीय चैट इतिहास, सहेजे गए उत्तर और क्विज परिणाम साफ़ करें'
-                      : 'Clear local chat history, saved solutions, and study progress')}
+                  {isHi
+                    ? 'स्थानीय चैट इतिहास, सहेजे गए उत्तर, क्विज परिणाम, नोट्स और अध्ययन योजना साफ़ करें। आपका छात्र खाता और सत्र सुरक्षित रहेगा।'
+                    : 'This clears your local chat history, saved solutions, quiz history, notes, and study planner data. Your student account, login session, and app preferences will remain intact.'}
                 </p>
               </div>
             </div>
@@ -674,7 +673,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             {isConfirmingReset ? (
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-rose-500/10 border border-rose-500/20">
                 <span className="text-[11px] text-rose-700 dark:text-rose-300 font-bold px-1">
-                  {isHi ? 'क्या आप निश्चित हैं?' : 'Reset everything?'}
+                  {isHi ? 'क्या आप निश्चित हैं?' : 'Reset study data?'}
                 </span>
                 <button
                   type="button"

@@ -232,3 +232,32 @@ export interface StudentProfile {
   streakDays: number;
   avatarSeed: string;
 }
+
+export interface AdminStudentSummary {
+  id: string;
+  name: string;
+  email: string;
+  semester: number;
+  branch: string;
+  xp: number;
+  streak: number;
+  isActive: boolean;
+  createdAt: string;
+  lastActiveDate: string | null;
+}
+
+export interface AdminStudentListResult {
+  students: AdminStudentSummary[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+  metrics: {
+    totalStudents: number;
+    activeStudents: number;
+    inactiveStudents: number;
+    semesterCounts: Record<number, number>;
+  };
+}

@@ -1,6 +1,7 @@
 import { AppDatabase } from "./connection";
-import { computeQuestionHash } from "./hash";
+import { computeQuestionHash, computeSha256Hex, hashPasswordScrypt, verifyPasswordScrypt } from "./hash";
 import { QuizQuestion } from "../../serverQuizBank";
+import crypto from "node:crypto";
 
 export class HierarchyResolutionError extends Error {
   public readonly statusCode = 400;
@@ -672,3 +673,313 @@ export function getSemesterPapersFromDb(db: AppDatabase, semester?: number) {
     };
   });
 }
+
+// ============================================================================
+// PHASE 1: BACKEND STUDENT AUTHENTICATION & REPOSITORY (SQLite Canonical Store)
+// ============================================================================
+
+export interface RegisterStudentInput {
+  name: string;
+  email: string;
+  password: string;
+  semester: number;
+  branch?: string;
+}
+
+export interface StudentProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: "student";
+  semester: number;
+  branch: string;
+  xp: number;
+  streak: number;
+  isActive: boolean;
+  createdAt: string;
+  lastActiveDate: string | null;
+}
+
+export interface StudentAuthResult {
+  token: string;
+  expiresAt: string;
+  user: StudentProfile;
+}
+
+/**
+ * Register a new student into the canonical SQLite `users` table.
+ * Enforces role = 'student', is_active = 1, unique email (case-insensitive),
+ * and creates a 30-day session in `user_sessions`.
+ */
+export function registerStudentAccount(
+  db: AppDatabase,
+  input: RegisterStudentInput,
+  ipAddress?: string,
+  userAgent?: string
+): { success: true; result: StudentAuthResult } | { success: false; reason: "DUPLICATE_EMAIL" | "VALIDATION_ERROR"; error: string } {
+  const cleanName = (input.name || "").trim();
+  const cleanEmail = (input.email || "").trim().toLowerCase();
+  const rawPassword = input.password || "";
+  const semNum = Number(input.semester);
+  const cleanBranch = (input.branch || "BCA").trim().toUpperCase();
+
+  if (!cleanName) {
+    return { success: false, reason: "VALIDATION_ERROR", error: "Student name is required." };
+  }
+  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return { success: false, reason: "VALIDATION_ERROR", error: "A valid email address is required." };
+  }
+  if (!rawPassword || rawPassword.length < 6) {
+    return { success: false, reason: "VALIDATION_ERROR", error: "Password must be at least 6 characters." };
+  }
+  if (!Number.isInteger(semNum) || semNum < 1 || semNum > 6) {
+    return { success: false, reason: "VALIDATION_ERROR", error: "Semester must be an integer between 1 and 6." };
+  }
+
+  // Check email uniqueness case-insensitively
+  const existingUser = db
+    .prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1")
+    .get(cleanEmail) as { id: string } | undefined;
+
+  if (existingUser) {
+    return { success: false, reason: "DUPLICATE_EMAIL", error: "An account with this email address already exists. Please log in." };
+  }
+
+  // Hash password using native Node scrypt with 16-byte random salt
+  const scryptHash = hashPasswordScrypt(rawPassword);
+  const userId = `usr_student_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const nowIso = new Date().toISOString();
+
+  // Insert student into users table
+  db.prepare(
+    `INSERT INTO users (
+       id, name, email, password_hash, role, semester, branch, xp, streak, is_active, created_at, updated_at
+     )
+     VALUES (?, ?, ?, ?, 'student', ?, ?, 0, 1, 1, ?, ?)`
+  ).run(userId, cleanName, cleanEmail, scryptHash, semNum, cleanBranch || "BCA", nowIso, nowIso);
+
+  // Create a 30-day student session
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = computeSha256Hex(rawToken);
+  const sessionId = `sess_student_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  db.prepare(
+    `INSERT INTO user_sessions (id, user_id, token_hash, expires_at, ip_address, user_agent, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(sessionId, userId, tokenHash, expiresAt, ipAddress || null, userAgent || null, nowIso);
+
+  const profile: StudentProfile = {
+    id: userId,
+    name: cleanName,
+    email: cleanEmail,
+    role: "student",
+    semester: semNum,
+    branch: cleanBranch || "BCA",
+    xp: 0,
+    streak: 1,
+    isActive: true,
+    createdAt: nowIso,
+    lastActiveDate: null,
+  };
+
+  return {
+    success: true,
+    result: {
+      token: rawToken,
+      expiresAt,
+      user: profile,
+    },
+  };
+}
+
+/**
+ * Authenticate student credentials against SQLite `users`.
+ * Rejects inactive accounts and administrators (students only).
+ */
+export function authenticateStudentCredentials(
+  db: AppDatabase,
+  email: string,
+  password: string,
+  ipAddress?: string,
+  userAgent?: string
+): { success: true; result: StudentAuthResult } | { success: false; reason: "INVALID_CREDENTIALS" | "ACCOUNT_INACTIVE" | "ADMIN_ATTEMPT"; error: string } {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  const rawPassword = password || "";
+
+  if (!cleanEmail || !rawPassword) {
+    return { success: false, reason: "INVALID_CREDENTIALS", error: "Invalid email or password." };
+  }
+
+  const userRow = db
+    .prepare(
+      `SELECT id, name, email, password_hash, role, semester, branch, xp, streak, is_active, created_at, last_active_date
+       FROM users
+       WHERE LOWER(email) = LOWER(?)
+       LIMIT 1`
+    )
+    .get(cleanEmail) as
+    | {
+        id: string;
+        name: string;
+        email: string;
+        password_hash: string;
+        role: "student" | "admin";
+        semester: number;
+        branch: string;
+        xp: number;
+        streak: number;
+        is_active: number;
+        created_at: string;
+        last_active_date: string | null;
+      }
+    | undefined;
+
+  if (!userRow) {
+    return { success: false, reason: "INVALID_CREDENTIALS", error: "Invalid email or password." };
+  }
+
+  // Reject administrators from student login endpoint to maintain strict role separation
+  if (userRow.role === "admin") {
+    return {
+      success: false,
+      reason: "ADMIN_ATTEMPT",
+      error: "Administrator accounts must authenticate via the Admin Portal at /admin/login.",
+    };
+  }
+
+  // Reject inactive accounts
+  if (userRow.is_active !== 1) {
+    return {
+      success: false,
+      reason: "ACCOUNT_INACTIVE",
+      error: "This student account is inactive. Please contact an administrator.",
+    };
+  }
+
+  // Verify scrypt password hash
+  const isValid = verifyPasswordScrypt(rawPassword, userRow.password_hash);
+  if (!isValid) {
+    return { success: false, reason: "INVALID_CREDENTIALS", error: "Invalid email or password." };
+  }
+
+  // Create a 30-day student session
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = computeSha256Hex(rawToken);
+  const sessionId = `sess_student_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const nowIso = new Date().toISOString();
+
+  db.prepare(
+    `INSERT INTO user_sessions (id, user_id, token_hash, expires_at, ip_address, user_agent, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(sessionId, userRow.id, tokenHash, expiresAt, ipAddress || null, userAgent || null, nowIso);
+
+  // Update last_active_date
+  db.prepare(
+    "UPDATE users SET last_active_date = date('now'), updated_at = datetime('now') WHERE id = ?"
+  ).run(userRow.id);
+
+  const profile: StudentProfile = {
+    id: userRow.id,
+    name: userRow.name,
+    email: userRow.email,
+    role: "student",
+    semester: userRow.semester,
+    branch: userRow.branch,
+    xp: userRow.xp,
+    streak: userRow.streak,
+    isActive: true,
+    createdAt: userRow.created_at,
+    lastActiveDate: new Date().toISOString().slice(0, 10),
+  };
+
+  return {
+    success: true,
+    result: {
+      token: rawToken,
+      expiresAt,
+      user: profile,
+    },
+  };
+}
+
+/**
+ * Verify a student session token from `user_sessions`.
+ * Validates active status, expiry, and role = 'student'.
+ * Updates last_active_date and returns sanitized student profile.
+ */
+export function verifyStudentSessionToken(
+  db: AppDatabase,
+  rawToken: string
+): StudentProfile | null {
+  const cleanToken = (rawToken || "").trim();
+  if (!cleanToken) return null;
+
+  const tokenHash = computeSha256Hex(cleanToken);
+  const row = db
+    .prepare(
+      `SELECT u.id, u.name, u.email, u.role, u.semester, u.branch, u.xp, u.streak, u.is_active, u.created_at, u.last_active_date, s.expires_at
+       FROM user_sessions s
+       JOIN users u ON s.user_id = u.id
+       WHERE s.token_hash = ?
+       LIMIT 1`
+    )
+    .get(tokenHash) as
+    | {
+        id: string;
+        name: string;
+        email: string;
+        role: "student" | "admin";
+        semester: number;
+        branch: string;
+        xp: number;
+        streak: number;
+        is_active: number;
+        created_at: string;
+        last_active_date: string | null;
+        expires_at: string;
+      }
+    | undefined;
+
+  if (!row || row.role !== "student" || row.is_active !== 1) {
+    return null;
+  }
+
+  // Check expiration
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    db.prepare("DELETE FROM user_sessions WHERE token_hash = ?").run(tokenHash);
+    return null;
+  }
+
+  // Update last_active_date
+  db.prepare(
+    "UPDATE users SET last_active_date = date('now'), updated_at = datetime('now') WHERE id = ?"
+  ).run(row.id);
+
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: "student",
+    semester: row.semester,
+    branch: row.branch,
+    xp: row.xp,
+    streak: row.streak,
+    isActive: true,
+    createdAt: row.created_at,
+    lastActiveDate: new Date().toISOString().slice(0, 10),
+  };
+}
+
+/**
+ * Revoke a student session token from SQLite `user_sessions`.
+ */
+export function revokeStudentSessionToken(db: AppDatabase, rawToken: string): boolean {
+  const cleanToken = (rawToken || "").trim();
+  if (!cleanToken) return false;
+  const tokenHash = computeSha256Hex(cleanToken);
+  const res = db.prepare("DELETE FROM user_sessions WHERE token_hash = ?").run(tokenHash);
+  return Number(res.changes) > 0;
+}
+

@@ -3,6 +3,8 @@ import {
   GTUQuestionPaper,
   QuizQuestion,
   StudyPlanData,
+  AdminStudentSummary,
+  AdminStudentListResult,
 } from '../types';
 
 export interface PapersApiResponse {
@@ -260,6 +262,119 @@ export const api = {
       throw new Error(`Study plan request failed with status ${res.status}`);
     }
     return res.json();
+  },
+
+  // ==========================================================================
+  // PHASE 1 & 2: STUDENT AUTHENTICATION API CLIENT (SQLite Canonical Store)
+  // ==========================================================================
+  async studentRegister(params: {
+    name: string;
+    email: string;
+    password: string;
+    semester: number;
+    branch?: string;
+  }): Promise<{
+    success: boolean;
+    token: string;
+    expiresAt: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: 'student';
+      semester: number;
+      branch: string;
+      xp: number;
+      streak: number;
+      isActive: boolean;
+      createdAt: string;
+      lastActiveDate: string | null;
+    };
+  }> {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify(params),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.error || `Registration failed (${res.status})`);
+    }
+    return data;
+  },
+
+  async studentLogin(
+    email: string,
+    password: string
+  ): Promise<{
+    success: boolean;
+    token: string;
+    expiresAt: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: 'student';
+      semester: number;
+      branch: string;
+      xp: number;
+      streak: number;
+      isActive: boolean;
+      createdAt: string;
+      lastActiveDate: string | null;
+    };
+  }> {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.error || `Login failed (${res.status})`);
+    }
+    return data;
+  },
+
+  async studentMe(token: string): Promise<{
+    authenticated: boolean;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: 'student';
+      semester: number;
+      branch: string;
+      xp: number;
+      streak: number;
+      isActive: boolean;
+      createdAt: string;
+      lastActiveDate: string | null;
+    };
+  }> {
+    const res = await fetch('/api/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: 'no-store',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.authenticated) {
+      throw new Error(data?.error || `Session check failed (${res.status})`);
+    }
+    return data;
+  },
+
+  async studentLogout(token?: string | null): Promise<void> {
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers,
+      cache: 'no-store',
+    }).catch(() => {});
   },
 
   // ==========================================================================
@@ -1102,6 +1217,90 @@ export const api = {
     const data = await res.json();
     if (!res.ok) {
       throw new Error(data?.error || `Failed to delete study material (${res.status})`);
+    }
+    return data;
+  },
+
+  // ==========================================================================
+  // PHASE 5: ADMIN STUDENT ACCOUNT MANAGEMENT API CLIENT
+  // ==========================================================================
+  async getAdminStudents(
+    params?: {
+      search?: string;
+      semester?: number | 'all';
+      status?: 'all' | 'active' | 'inactive';
+      page?: number;
+      pageSize?: number;
+    },
+    token?: string | null
+  ): Promise<AdminStudentListResult> {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.set('search', params.search);
+    if (params?.semester !== undefined && params.semester !== 'all') {
+      qs.set('semester', String(params.semester));
+    }
+    if (params?.status && params.status !== 'all') {
+      qs.set('status', params.status);
+    }
+    if (params?.page) qs.set('page', String(params.page));
+    if (params?.pageSize) qs.set('pageSize', String(params.pageSize));
+
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(`/api/admin/students${qs.toString() ? `?${qs.toString()}` : ''}`, {
+      headers,
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error || `Failed to load students (${res.status})`);
+    }
+    return data;
+  },
+
+  async updateAdminStudentStatus(
+    studentId: string,
+    isActive: boolean,
+    token?: string | null
+  ): Promise<{ success: boolean; student: AdminStudentSummary }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}/status`, {
+      method: 'PATCH',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ isActive }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error || `Failed to update student status (${res.status})`);
+    }
+    return data;
+  },
+
+  async resetAdminStudentPassword(
+    studentId: string,
+    newPassword: string,
+    token?: string | null
+  ): Promise<{ success: boolean; message: string }> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}/reset-password`, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.error || `Failed to reset student password (${res.status})`);
     }
     return data;
   },

@@ -27,6 +27,7 @@ interface AdminHeaderProps {
 
 const SECTION_METADATA: Record<AdminSectionTab, { group: string; title: string }> = {
   dashboard: { group: 'OVERVIEW', title: 'Dashboard' },
+  students: { group: 'USERS & ACCOUNTS', title: 'Students & Accounts' },
   subjects: { group: 'CURRICULUM', title: 'Subjects & Syllabus' },
   materials: { group: 'CURRICULUM', title: 'Study Materials' },
   papers: { group: 'EXAMINATION', title: 'GTU Papers' },

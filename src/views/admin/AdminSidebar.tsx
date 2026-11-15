@@ -9,11 +9,13 @@ import {
   ShieldCheck,
   ArrowLeft,
   X,
+  Users,
 } from 'lucide-react';
 import { soundManager } from '../../services/soundManager';
 
 export type AdminSectionTab =
   | 'dashboard'
+  | 'students'
   | 'subjects'
   | 'materials'
   | 'papers'
@@ -32,6 +34,7 @@ interface AdminSidebarProps {
     availablePapers?: number;
     totalPaperQuestions?: number;
     totalActiveMcqs?: number;
+    totalStudents?: number;
   } | null;
 }
 
@@ -61,6 +64,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           id: 'dashboard',
           label: 'Dashboard',
           icon: LayoutDashboard,
+        },
+      ],
+    },
+    {
+      groupTitle: 'USERS & ACCOUNTS',
+      items: [
+        {
+          id: 'students',
+          label: 'Students & Accounts',
+          icon: Users,
+          badge: stats?.totalStudents !== undefined ? `${stats.totalStudents}` : undefined,
         },
       ],
     },

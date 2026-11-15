@@ -1,17 +1,23 @@
 import { User } from '../types';
+import { api } from './api';
 
 /**
  * Authentication Service for StudyMate AI.
  * 
- * Follows clean architectural abstraction ready for seamless Firebase Authentication drop-in.
- * In this production-ready mock/local mode:
- * - Passwords are NEVER stored in plaintext (hashed using SHA-256 via browser Web Crypto API).
- * - Safe session persistence using localStorage / sessionStorage based on 'rememberMe'.
- * - Event subscriber model mimicking Firebase `onAuthStateChanged`.
+ * Phase 2 SQLite Canonical Store Integration:
+ * - Backed by server-side SQLite (`users` and `user_sessions` tables).
+ * - Passwords are NEVER stored in plaintext.
+ * - Stores only the random raw session token in localStorage / sessionStorage.
+ * - Event subscriber model (`authService.subscribe()`) preserved for UI components.
+ * - Synchronous `getCurrentUser()` preserved for seamless hydration.
+ * - Safe legacy migration: Migrates local accounts to SQLite only when the user
+ *   supplies their plaintext password, without ever overwriting or losing data.
  */
 
 const AUTH_SESSION_KEY = 'studymate_user_session_v3';
+const AUTH_TOKEN_KEY = 'studymate_student_token_v1';
 const AUTH_USERS_DB_KEY = 'studymate_registered_accounts_v1';
+const AUTH_MIGRATED_DB_KEY = 'studymate_migrated_accounts_v1';
 const AUTH_SALT = 'studymate_secure_salt_2026';
 
 interface StoredAccount {
@@ -19,7 +25,7 @@ interface StoredAccount {
   passwordHash: string;
 }
 
-// Safe SHA-256 hash using Web Crypto API
+// Safe SHA-256 hash using Web Crypto API (retained to verify legacy local accounts)
 async function hashPassword(password: string): Promise<string> {
   try {
     const encoder = new TextEncoder();
@@ -39,11 +45,12 @@ async function hashPassword(password: string): Promise<string> {
   }
 }
 
-// Default Seed User: GTU BCA Student
+// Default Seed User: GTU BCA Student (Offline Demo student)
 const DEFAULT_DEMO_USER: User = {
   id: 'usr-gtu-demo-1',
   name: 'Faiz Alam',
   email: 'faiz@gtu.ac.in',
+  role: 'student',
   college: 'Gujarat Technological University (GTU)',
   course: 'Bachelor of Computer Applications (BCA)',
   semester: 4,
@@ -66,7 +73,7 @@ class AuthService {
 
   private initSession() {
     try {
-      // 1. Purge legacy auto-seeded demo user sessions so unauthenticated visitors start directly on the Login screen
+      // 1. Purge legacy auto-seeded demo user sessions
       localStorage.removeItem('studymate_auth_user');
       localStorage.removeItem('studymate_auth_session_v2');
       localStorage.removeItem('studymate_auth_session_v1');
@@ -74,7 +81,7 @@ class AuthService {
       sessionStorage.removeItem('studymate_auth_session_v2');
       sessionStorage.removeItem('studymate_auth_session_v1');
 
-      // 2. Read only valid user sessions explicitly logged in
+      // 2. Read cached session object for immediate synchronous UI render
       const stored =
         localStorage.getItem(AUTH_SESSION_KEY) || sessionStorage.getItem(AUTH_SESSION_KEY);
       if (stored) {
@@ -94,7 +101,6 @@ class AuthService {
           this.currentUser = null;
         }
       } else {
-        // No active session: Start as null so the Login entry screen is visible to new users
         this.currentUser = null;
       }
     } catch {
@@ -102,18 +108,75 @@ class AuthService {
     }
     this.isInitialized = true;
     this.ensureDemoAccountSeeded();
+
+    // 3. Asynchronously verify session token against SQLite backend if present
+    this.verifyServerSessionInBackground();
   }
 
-  private async ensureDemoAccountSeeded() {
+  /**
+   * Verifies the stored student session token with the backend.
+   * If invalid or expired, gracefully clears the session and notifies UI.
+   */
+  private async verifyServerSessionInBackground() {
+    if (typeof window === 'undefined') return;
+    const token =
+      localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY);
+
+    if (!token) {
+      // If there is no token and user is not demo, clear stale cached session
+      if (this.currentUser && !this.currentUser.isDemo) {
+        this.clearLocalSession();
+        this.notify();
+      }
+      return;
+    }
+
+    try {
+      const res = await api.studentMe(token);
+      if (res && res.authenticated && res.user) {
+        // Map server student profile to User interface
+        const updatedUser: User = {
+          id: res.user.id,
+          name: res.user.name,
+          email: res.user.email,
+          role: 'student',
+          semester: res.user.semester,
+          course: `${res.user.branch || 'BCA'} (Gujarat Technological University)`,
+          college: this.currentUser?.college || 'Gujarat Technological University (GTU)',
+          enrollmentNo: this.currentUser?.enrollmentNo,
+          avatarSeed: this.generateAvatarSeed(res.user.name),
+          createdAt: res.user.createdAt,
+          isDemo: false,
+        };
+        this.currentUser = updatedUser;
+        const serialized = JSON.stringify(updatedUser);
+        if (localStorage.getItem(AUTH_TOKEN_KEY)) {
+          localStorage.setItem(AUTH_SESSION_KEY, serialized);
+        } else {
+          sessionStorage.setItem(AUTH_SESSION_KEY, serialized);
+        }
+        this.notify();
+      }
+    } catch {
+      // If token expired or rejected by server, invalidate session
+      if (this.currentUser && !this.currentUser.isDemo) {
+        this.clearLocalSession();
+        this.notify();
+      }
+    }
+  }
+
+  private ensureDemoAccountSeeded() {
     try {
       const accounts = this.getStoredAccounts();
       if (!accounts.some((a) => a.user.email.toLowerCase() === DEFAULT_DEMO_USER.email.toLowerCase())) {
-        const demoHash = await hashPassword('gtu123');
-        accounts.push({
-          user: DEFAULT_DEMO_USER,
-          passwordHash: demoHash,
-        });
-        localStorage.setItem(AUTH_USERS_DB_KEY, JSON.stringify(accounts));
+        hashPassword('gtu123').then((demoHash) => {
+          accounts.push({
+            user: DEFAULT_DEMO_USER,
+            passwordHash: demoHash,
+          });
+          localStorage.setItem(AUTH_USERS_DB_KEY, JSON.stringify(accounts));
+        }).catch(() => {});
       }
     } catch {
       // safe fallback
@@ -130,9 +193,26 @@ class AuthService {
     return [];
   }
 
+  private generateAvatarSeed(name: string): string {
+    const parts = (name || '').trim().split(' ').filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return (name || 'ST').slice(0, 2).toUpperCase();
+  }
+
+  private clearLocalSession() {
+    this.currentUser = null;
+    localStorage.removeItem(AUTH_SESSION_KEY);
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem('studymate_auth_user');
+    sessionStorage.removeItem('studymate_auth_user');
+  }
+
   public subscribe(listener: AuthStateListener): () => void {
     this.listeners.push(listener);
-    // Immediate callback with current state
     listener(this.currentUser);
     return () => {
       this.listeners = this.listeners.filter((l) => l !== listener);
@@ -150,14 +230,19 @@ class AuthService {
     return this.currentUser;
   }
 
+  /**
+   * Student Login:
+   * 1. Attempts authentication against SQLite backend via POST /api/auth/login.
+   * 2. If server returns 401/404 and a matching legacy account exists in localStorage,
+   *    verifies the legacy SHA-256 hash with the supplied plaintext password and
+   *    migrates the account to SQLite via POST /api/auth/register.
+   * 3. Stores session token securely and updates currentUser.
+   */
   public async login(
     email: string,
     password: string,
     rememberMe = true
   ): Promise<{ success: boolean; user?: User; error?: string }> {
-    // Artificial small delay to simulate secure network authentication
-    await new Promise((resolve) => setTimeout(resolve, 450));
-
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !password) {
       return { success: false, error: 'Please provide both email address and password.' };
@@ -168,46 +253,143 @@ class AuthService {
       return { success: false, error: 'Please enter a valid email address.' };
     }
 
-    const inputHash = await hashPassword(password);
-    const accounts = this.getStoredAccounts();
-
-    // Find account by email
-    const match = accounts.find((a) => a.user.email.toLowerCase() === normalizedEmail);
-
-    if (!match) {
-      // If it's the demo email and matching password
-      if (normalizedEmail === DEFAULT_DEMO_USER.email.toLowerCase() && (password === 'gtu123' || password === 'password')) {
-        this.currentUser = DEFAULT_DEMO_USER;
-      } else {
-        return {
-          success: false,
-          error: 'No registered student account found with this email. Please register or use Demo Student.',
-        };
-      }
-    } else {
-      if (match.passwordHash !== inputHash && password !== 'gtu123') {
-        return { success: false, error: 'Incorrect password. Please verify and try again.' };
-      }
-      this.currentUser = match.user;
+    // A. Demo Student handling
+    if (
+      normalizedEmail === DEFAULT_DEMO_USER.email.toLowerCase() &&
+      (password === 'gtu123' || password === 'password')
+    ) {
+      return this.loginAsDemo();
     }
 
-    // Persist session safely
-    if (this.currentUser) {
-      const serialized = JSON.stringify(this.currentUser);
-      if (rememberMe) {
-        localStorage.setItem(AUTH_SESSION_KEY, serialized);
-        sessionStorage.removeItem(AUTH_SESSION_KEY);
-      } else {
-        sessionStorage.setItem(AUTH_SESSION_KEY, serialized);
-        localStorage.removeItem(AUTH_SESSION_KEY);
+    // B. Attempt direct SQLite Backend Authentication
+    try {
+      const serverRes = await api.studentLogin(normalizedEmail, password);
+      if (serverRes && serverRes.success && serverRes.user) {
+        const authenticatedUser: User = {
+          id: serverRes.user.id,
+          name: serverRes.user.name,
+          email: serverRes.user.email,
+          role: 'student',
+          semester: serverRes.user.semester,
+          course: `${serverRes.user.branch || 'BCA'} (Gujarat Technological University)`,
+          college: 'Gujarat Technological University (GTU)',
+          avatarSeed: this.generateAvatarSeed(serverRes.user.name),
+          createdAt: serverRes.user.createdAt,
+          isDemo: false,
+        };
+
+        this.currentUser = authenticatedUser;
+        const serialized = JSON.stringify(authenticatedUser);
+
+        if (rememberMe) {
+          localStorage.setItem(AUTH_TOKEN_KEY, serverRes.token);
+          localStorage.setItem(AUTH_SESSION_KEY, serialized);
+          sessionStorage.removeItem(AUTH_TOKEN_KEY);
+          sessionStorage.removeItem(AUTH_SESSION_KEY);
+        } else {
+          sessionStorage.setItem(AUTH_TOKEN_KEY, serverRes.token);
+          sessionStorage.setItem(AUTH_SESSION_KEY, serialized);
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(AUTH_SESSION_KEY);
+        }
+
+        this.notify();
+        return { success: true, user: authenticatedUser };
       }
-      this.notify();
-      return { success: true, user: this.currentUser };
+    } catch (err: any) {
+      const errMsg = err?.message || '';
+
+      // If backend explicitly rejected due to admin or inactive account, return immediately
+      if (errMsg.includes('Administrator accounts must authenticate') || errMsg.includes('account is inactive')) {
+        return { success: false, error: errMsg };
+      }
+
+      // C. Legacy Account Migration Check
+      // If login failed, inspect whether this email exists in studymate_registered_accounts_v1
+      const legacyAccounts = this.getStoredAccounts();
+      const legacyMatch = legacyAccounts.find(
+        (a) => a.user.email.toLowerCase() === normalizedEmail
+      );
+
+      if (legacyMatch) {
+        const inputHash = await hashPassword(password);
+        if (legacyMatch.passwordHash === inputHash) {
+          // Plaintext password verified against legacy SHA-256 hash!
+          // Safely migrate account to SQLite using POST /api/auth/register
+          try {
+            const migRes = await api.studentRegister({
+              name: legacyMatch.user.name || 'GTU Student',
+              email: normalizedEmail,
+              password,
+              semester: Number(legacyMatch.user.semester) || 1,
+              branch: 'BCA',
+            });
+
+            if (migRes && migRes.success && migRes.user) {
+              const migratedUser: User = {
+                id: migRes.user.id,
+                name: migRes.user.name,
+                email: migRes.user.email,
+                role: 'student',
+                semester: migRes.user.semester,
+                course: `${migRes.user.branch || 'BCA'} (Gujarat Technological University)`,
+                college: legacyMatch.user.college || 'Gujarat Technological University (GTU)',
+                enrollmentNo: legacyMatch.user.enrollmentNo,
+                avatarSeed: this.generateAvatarSeed(migRes.user.name),
+                createdAt: migRes.user.createdAt,
+                isDemo: false,
+              };
+
+              this.currentUser = migratedUser;
+              const serialized = JSON.stringify(migratedUser);
+
+              if (rememberMe) {
+                localStorage.setItem(AUTH_TOKEN_KEY, migRes.token);
+                localStorage.setItem(AUTH_SESSION_KEY, serialized);
+              } else {
+                sessionStorage.setItem(AUTH_TOKEN_KEY, migRes.token);
+                sessionStorage.setItem(AUTH_SESSION_KEY, serialized);
+              }
+
+              // Record migration success without deleting original legacy entry
+              try {
+                const migratedList = JSON.parse(localStorage.getItem(AUTH_MIGRATED_DB_KEY) || '[]');
+                if (!migratedList.includes(normalizedEmail)) {
+                  migratedList.push(normalizedEmail);
+                  localStorage.setItem(AUTH_MIGRATED_DB_KEY, JSON.stringify(migratedList));
+                }
+              } catch {}
+
+              this.notify();
+              return { success: true, user: migratedUser };
+            }
+          } catch (migErr: any) {
+            // If email already exists on server with different password (conflict)
+            if (migErr?.message?.includes('already exists')) {
+              return {
+                success: false,
+                error: 'Incorrect password. Please verify your credentials and try again.',
+              };
+            }
+          }
+        }
+      }
+
+      return {
+        success: false,
+        error: errMsg || 'Invalid email or password. Please verify and try again.',
+      };
     }
 
     return { success: false, error: 'Authentication failed. Please try again.' };
   }
 
+  /**
+   * Student Registration:
+   * 1. Submits registration to SQLite backend via POST /api/auth/register.
+   * 2. Preserves legacy account list in localStorage for offline resiliency without overwriting.
+   * 3. Stores session token securely and updates currentUser.
+   */
   public async register(
     name: string,
     email: string,
@@ -216,8 +398,6 @@ class AuthService {
     semester = 4,
     course = 'Bachelor of Computer Applications (BCA)'
   ): Promise<{ success: boolean; user?: User; error?: string }> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
     const trimmedName = name.trim();
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -234,56 +414,83 @@ class AuthService {
       return { success: false, error: 'Password must be at least 6 characters.' };
     }
 
-    const accounts = this.getStoredAccounts();
-    if (accounts.some((a) => a.user.email.toLowerCase() === normalizedEmail)) {
-      return { success: false, error: 'An account with this email address already exists. Please log in.' };
+    const semNum = Number(semester) || 1;
+
+    try {
+      const regRes = await api.studentRegister({
+        name: trimmedName,
+        email: normalizedEmail,
+        password,
+        semester: semNum,
+        branch: 'BCA',
+      });
+
+      if (regRes && regRes.success && regRes.user) {
+        const newUser: User = {
+          id: regRes.user.id,
+          name: regRes.user.name,
+          email: regRes.user.email,
+          role: 'student',
+          college: college.trim() || 'Gujarat Technological University (GTU)',
+          course: course.trim() || 'Bachelor of Computer Applications (BCA)',
+          semester: regRes.user.semester,
+          enrollmentNo: `GTU${Math.floor(10000000 + Math.random() * 90000000)}`,
+          avatarSeed: this.generateAvatarSeed(regRes.user.name),
+          createdAt: regRes.user.createdAt,
+          isDemo: false,
+        };
+
+        this.currentUser = newUser;
+        const serialized = JSON.stringify(newUser);
+
+        localStorage.setItem(AUTH_TOKEN_KEY, regRes.token);
+        localStorage.setItem(AUTH_SESSION_KEY, serialized);
+
+        // Keep local copy in studymate_registered_accounts_v1 for backwards compatibility
+        try {
+          const accounts = this.getStoredAccounts();
+          if (!accounts.some((a) => a.user.email.toLowerCase() === normalizedEmail)) {
+            const pwdHash = await hashPassword(password);
+            accounts.push({ user: newUser, passwordHash: pwdHash });
+            localStorage.setItem(AUTH_USERS_DB_KEY, JSON.stringify(accounts));
+          }
+        } catch {}
+
+        this.notify();
+        return { success: true, user: newUser };
+      }
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err?.message || 'Registration failed. Please try again.',
+      };
     }
 
-    // Generate avatar initials
-    const nameParts = trimmedName.split(' ').filter(Boolean);
-    const avatarSeed =
-      nameParts.length >= 2
-        ? `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
-        : trimmedName.slice(0, 2).toUpperCase();
-
-    const newUser: User = {
-      id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      name: trimmedName,
-      email: normalizedEmail,
-      college: college.trim() || 'Gujarat Technological University',
-      course: course.trim() || 'Bachelor of Computer Applications (BCA)',
-      semester: Number(semester) || 1,
-      enrollmentNo: `GTU${Math.floor(10000000 + Math.random() * 90000000)}`,
-      avatarSeed,
-      createdAt: new Date().toISOString(),
-      isDemo: false,
-    };
-
-    const passwordHash = await hashPassword(password);
-    accounts.push({ user: newUser, passwordHash });
-    localStorage.setItem(AUTH_USERS_DB_KEY, JSON.stringify(accounts));
-
-    this.currentUser = newUser;
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(newUser));
-    this.notify();
-
-    return { success: true, user: newUser };
+    return { success: false, error: 'Registration failed. Please try again.' };
   }
 
+  /**
+   * Student Logout:
+   * Calls POST /api/auth/logout on the backend to revoke the token in SQLite,
+   * then purges the active client session and notifies listeners.
+   */
   public async logout(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    this.currentUser = null;
-    localStorage.removeItem(AUTH_SESSION_KEY);
-    sessionStorage.removeItem(AUTH_SESSION_KEY);
-    localStorage.removeItem('studymate_auth_user');
-    sessionStorage.removeItem('studymate_auth_user');
+    const token =
+      localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY);
+
+    if (token) {
+      await api.studentLogout(token);
+    }
+
+    this.clearLocalSession();
     this.notify();
   }
 
   public async loginAsDemo(): Promise<{ success: boolean; user: User }> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
     this.currentUser = DEFAULT_DEMO_USER;
     localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(DEFAULT_DEMO_USER));
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
     this.notify();
     return { success: true, user: DEFAULT_DEMO_USER };
   }
@@ -335,3 +542,4 @@ class AuthService {
 }
 
 export const authService = new AuthService();
+

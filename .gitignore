@@ -6,7 +6,18 @@ coverage/
 *.log
 .env*
 !.env.example
-# Local SQLite database files
+# Local SQLite database files and backups
 studymate.db
 studymate.db-shm
 studymate.db-wal
+studymate.db*
+*.db
+*.db-shm
+*.db-wal
+*.db.*
+*.sqlite
+*.sqlite*
+# Local source-code backup files
+*.backup_*
+*.backup
+*.bak

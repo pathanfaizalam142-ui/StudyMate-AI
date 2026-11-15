@@ -7,6 +7,7 @@ import {
   archiveAdminPaper,
   authenticateAdminCredentials,
   authenticateAnyUserSession,
+  authenticateStudentCredentials,
   createAdminMcq,
   createAdminPaper,
   createAdminPaperQuestion,
@@ -27,6 +28,7 @@ import {
   getAdminPaperQuestionById,
   getAdminPapers,
   getAdminPaperWithQuestions,
+  getAdminStudentsList,
   getAdminStudyMaterialById,
   getAdminStudyMaterials,
   getAdminSubjectById,
@@ -38,17 +40,22 @@ import {
   inspectAdminSessionToken,
   parseValidSemester,
   persistValidatedAiQuestions,
+  registerStudentAccount,
   reorderAdminPaperQuestions,
+  resetAdminStudentPassword,
   revokeAdminSessionToken,
+  revokeStudentSessionToken,
   resolveAcademicHierarchy,
   updateAdminMcq,
   updateAdminPaper,
   updateAdminPaperQuestion,
+  updateAdminStudentStatus,
   updateAdminStudyMaterial,
   updateAdminSubject,
   updateAdminTopic,
   updateAdminUnit,
   verifyAdminSessionToken,
+  verifyStudentSessionToken,
 } from "./src/db/index.js";
 
 dotenv.config();
@@ -570,6 +577,171 @@ app.get("/api/papers/:id", (req, res) => {
 });
 
 // ============================================================================
+// PHASE 1: BACKEND STUDENT AUTHENTICATION ENDPOINTS (Canonical SQLite Store)
+// ============================================================================
+
+function extractStudentToken(req: express.Request): string | null {
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+    return authHeader.slice(7).trim();
+  }
+  const customToken = req.headers["x-student-token"] || req.headers["x-auth-token"];
+  if (typeof customToken === "string" && customToken.trim()) {
+    return customToken.trim();
+  }
+  return null;
+}
+
+// A. POST /api/auth/register
+app.post("/api/auth/register", (req, res) => {
+  try {
+    const { name, email, password, semester, branch } = req.body || {};
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      res.status(400).json({ error: "Full name is required." });
+      return;
+    }
+    if (!email || typeof email !== "string" || !email.trim()) {
+      res.status(400).json({ error: "Email address is required." });
+      return;
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      res.status(400).json({ error: "Please provide a valid email address." });
+      return;
+    }
+    if (!password || typeof password !== "string" || password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters in length." });
+      return;
+    }
+    const semNum = Number(semester);
+    if (!Number.isInteger(semNum) || semNum < 1 || semNum > 6) {
+      res.status(400).json({ error: "Semester must be an integer between 1 and 6." });
+      return;
+    }
+
+    const regResult = registerStudentAccount(
+      db,
+      {
+        name: name.trim(),
+        email: cleanEmail,
+        password,
+        semester: semNum,
+        branch: typeof branch === "string" && branch.trim() ? branch.trim() : "BCA",
+      },
+      req.ip,
+      req.headers["user-agent"]
+    );
+
+    if (regResult.success === false) {
+      if (regResult.reason === "DUPLICATE_EMAIL") {
+        res.status(409).json({ error: regResult.error });
+        return;
+      }
+      res.status(400).json({ error: regResult.error });
+      return;
+    }
+
+    res.status(201).json({
+      success: true,
+      token: regResult.result.token,
+      expiresAt: regResult.result.expiresAt,
+      user: regResult.result.user,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "An unexpected error occurred during student registration." });
+  }
+});
+
+// B. POST /api/auth/login
+app.post("/api/auth/login", (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+
+    if (!email || typeof email !== "string" || !email.trim() || !password || typeof password !== "string") {
+      res.status(400).json({ error: "Both email address and password are required." });
+      return;
+    }
+
+    const authResult = authenticateStudentCredentials(
+      db,
+      email.trim(),
+      password,
+      req.ip,
+      req.headers["user-agent"]
+    );
+
+    if (authResult.success === false) {
+      if (authResult.reason === "ADMIN_ATTEMPT") {
+        res.status(403).json({ error: authResult.error });
+        return;
+      }
+      if (authResult.reason === "ACCOUNT_INACTIVE") {
+        res.status(403).json({ error: authResult.error });
+        return;
+      }
+      // Constant-time generic error to prevent email enumeration
+      res.status(401).json({ error: "Invalid email or password." });
+      return;
+    }
+
+    res.json({
+      success: true,
+      token: authResult.result.token,
+      expiresAt: authResult.result.expiresAt,
+      user: authResult.result.user,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "An unexpected error occurred during student authentication." });
+  }
+});
+
+// C. GET /api/auth/me
+app.get("/api/auth/me", (req, res) => {
+  try {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+
+    const token = extractStudentToken(req);
+    if (!token) {
+      res.status(401).json({ authenticated: false, error: "Missing authentication session token." });
+      return;
+    }
+
+    const profile = verifyStudentSessionToken(db, token);
+    if (!profile) {
+      res.status(401).json({ authenticated: false, error: "Invalid or expired student session." });
+      return;
+    }
+
+    res.json({
+      authenticated: true,
+      user: profile,
+    });
+  } catch (err: any) {
+    res.status(500).json({ authenticated: false, error: "Failed to verify student session." });
+  }
+});
+
+// D. POST /api/auth/logout
+app.post("/api/auth/logout", (req, res) => {
+  try {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+
+    const token = extractStudentToken(req);
+    const revoked = token ? revokeStudentSessionToken(db, token) : false;
+
+    res.json({
+      success: true,
+      revoked,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "An error occurred during logout." });
+  }
+});
+
+// ============================================================================
 // PHASE 3 & PHASE 4: FULL ADMIN CONTENT MANAGEMENT API (100% SQLite-Driven)
 // ============================================================================
 
@@ -798,6 +970,104 @@ const handleAdminStats = (req: express.Request, res: express.Response) => {
 app.get("/api/admin/stats", adminAccessGuard, handleAdminStats);
 app.get("/api/admin/dashboard", adminAccessGuard, handleAdminStats);
 app.get("/api/admin/overview", adminAccessGuard, handleAdminStats);
+
+// ============================================================================
+// 1.5. ADMIN STUDENT ACCOUNT MANAGEMENT (Phase 5: Strictly role='student')
+// ============================================================================
+
+// GET /api/admin/students — Filter, search, and paginate student accounts
+app.get("/api/admin/students", adminAccessGuard, (req, res) => {
+  try {
+    const search = typeof req.query.search === "string" ? req.query.search : undefined;
+    const rawSemester = req.query.semester;
+    let semester: number | "all" = "all";
+    if (rawSemester && rawSemester !== "all") {
+      const parsed = Number(rawSemester);
+      if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 6) {
+        semester = parsed;
+      }
+    }
+
+    const rawStatus = String(req.query.status || "all").toLowerCase();
+    const status: "all" | "active" | "inactive" =
+      rawStatus === "active" ? "active" : rawStatus === "inactive" ? "inactive" : "all";
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const pageSize = Math.max(1, Math.min(100, Number(req.query.pageSize) || 20));
+
+    const result = getAdminStudentsList(db, {
+      search,
+      semester,
+      status,
+      page,
+      pageSize,
+    });
+
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to load student accounts." });
+  }
+});
+
+// PATCH /api/admin/students/:id/status — Activate or deactivate student account
+app.patch("/api/admin/students/:id/status", adminAccessGuard, (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const { isActive } = req.body || {};
+
+    if (typeof isActive !== "boolean") {
+      res.status(400).json({ error: "Explicit boolean 'isActive' property is required in request body." });
+      return;
+    }
+
+    const updateRes = updateAdminStudentStatus(db, studentId, isActive);
+    if (updateRes.success === false) {
+      if (updateRes.reason === "NOT_FOUND") {
+        res.status(404).json({ error: updateRes.error });
+        return;
+      }
+      res.status(400).json({ error: updateRes.error });
+      return;
+    }
+
+    res.json({
+      success: true,
+      student: updateRes.student,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to update student account status." });
+  }
+});
+
+// POST /api/admin/students/:id/reset-password — Admin-initiated student password reset
+app.post("/api/admin/students/:id/reset-password", adminAccessGuard, (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const { newPassword } = req.body || {};
+
+    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+      res.status(400).json({ error: "New temporary password must be at least 6 characters in length." });
+      return;
+    }
+
+    const resetRes = resetAdminStudentPassword(db, studentId, newPassword);
+    if (resetRes.success === false) {
+      if (resetRes.reason === "NOT_FOUND") {
+        res.status(404).json({ error: resetRes.error });
+        return;
+      }
+      res.status(400).json({ error: resetRes.error });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: resetRes.message,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to reset student password." });
+  }
+});
 
 // 2. Admin Subject, Unit & Topic Management (Full CRUD on Syllabus Metadata, Units & Topics)
 app.get("/api/admin/subjects", adminAccessGuard, (req, res) => {

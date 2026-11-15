@@ -17,6 +17,9 @@ export interface AdminDashboardStats {
   totalQuizzes: number;
   totalQuizQuestions: number;
   totalQuarantinedRecords: number;
+  totalStudents?: number;
+  activeStudents?: number;
+  inactiveStudents?: number;
   semesterBreakdown: Array<{
     semester: number;
     title: string;
@@ -189,6 +192,9 @@ export function getAdminDashboardStats(db: AppDatabase): AdminDashboardStats {
   const totalQuizzes = countQuery("SELECT COUNT(*) AS c FROM quizzes");
   const totalQuizQuestions = countQuery("SELECT COUNT(*) AS c FROM quiz_questions");
   const totalQuarantinedRecords = countQuery("SELECT COUNT(*) AS c FROM quarantined_legacy_records");
+  const totalStudents = countQuery("SELECT COUNT(*) AS c FROM users WHERE role = 'student'");
+  const activeStudents = countQuery("SELECT COUNT(*) AS c FROM users WHERE role = 'student' AND is_active = 1");
+  const inactiveStudents = countQuery("SELECT COUNT(*) AS c FROM users WHERE role = 'student' AND is_active = 0");
 
   const semRows = db
     .prepare(
@@ -261,6 +267,9 @@ export function getAdminDashboardStats(db: AppDatabase): AdminDashboardStats {
     totalQuizzes,
     totalQuizQuestions,
     totalQuarantinedRecords,
+    totalStudents,
+    activeStudents,
+    inactiveStudents,
     semesterBreakdown,
     quarantinedRecords: quarantinedRows.map((q) => ({
       id: q.id,
@@ -3838,5 +3847,265 @@ export function upsertAdminUserAccount(
     isActive: true,
   };
 }
+
+// ============================================================================
+// PHASE 5: ADMIN STUDENT MANAGEMENT HELPERS (Zero Password Hash Exposure)
+// ============================================================================
+
+export interface AdminStudentSummary {
+  id: string;
+  name: string;
+  email: string;
+  semester: number;
+  branch: string;
+  xp: number;
+  streak: number;
+  isActive: boolean;
+  createdAt: string;
+  lastActiveDate: string | null;
+}
+
+export interface AdminStudentListResult {
+  students: AdminStudentSummary[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+  metrics: {
+    totalStudents: number;
+    activeStudents: number;
+    inactiveStudents: number;
+    semesterCounts: Record<number, number>;
+  };
+}
+
+/**
+ * Retrieves student accounts with filtering, search, pagination, and metrics.
+ * STRICT SECURITY: Never queries, selects, or exposes `password_hash`.
+ */
+export function getAdminStudentsList(
+  db: AppDatabase,
+  options: {
+    search?: string;
+    semester?: number | 'all';
+    status?: 'all' | 'active' | 'inactive';
+    page?: number;
+    pageSize?: number;
+  }
+): AdminStudentListResult {
+  const page = Math.max(1, Number(options.page) || 1);
+  const pageSize = Math.max(1, Math.min(100, Number(options.pageSize) || 20));
+  const offset = (page - 1) * pageSize;
+
+  const conditions: string[] = ["role = 'student'"];
+  const params: any[] = [];
+
+  const rawSearch = (options.search || "").trim();
+  if (rawSearch) {
+    conditions.push("(LOWER(name) LIKE ? OR LOWER(email) LIKE ?)");
+    const pattern = `%${rawSearch.toLowerCase()}%`;
+    params.push(pattern, pattern);
+  }
+
+  if (options.semester && options.semester !== "all") {
+    const sem = Number(options.semester);
+    if (Number.isInteger(sem) && sem >= 1 && sem <= 6) {
+      conditions.push("semester = ?");
+      params.push(sem);
+    }
+  }
+
+  if (options.status === "active") {
+    conditions.push("is_active = 1");
+  } else if (options.status === "inactive") {
+    conditions.push("is_active = 0");
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  // 1. Total matching students
+  const countRow = db
+    .prepare(`SELECT COUNT(*) AS total FROM users ${whereClause}`)
+    .get(...params) as { total: number };
+  const total = Number(countRow?.total || 0);
+
+  // 2. Paginated students query (Zero password_hash selected)
+  const studentsQuery = `
+    SELECT id, name, email, semester, branch, xp, streak, is_active, created_at, last_active_date
+    FROM users
+    ${whereClause}
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+  `;
+  const studentRows = db.prepare(studentsQuery).all(...params, pageSize, offset) as Array<{
+    id: string;
+    name: string;
+    email: string;
+    semester: number;
+    branch: string;
+    xp: number;
+    streak: number;
+    is_active: number;
+    created_at: string;
+    last_active_date: string | null;
+  }>;
+
+  const students: AdminStudentSummary[] = studentRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    semester: row.semester,
+    branch: row.branch,
+    xp: row.xp,
+    streak: row.streak,
+    isActive: row.is_active === 1,
+    createdAt: row.created_at,
+    lastActiveDate: row.last_active_date,
+  }));
+
+  // 3. Aggregate metrics across ALL students (role = 'student')
+  const metricsRow = db
+    .prepare(
+      `SELECT
+         COUNT(*) AS totalStudents,
+         SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS activeStudents,
+         SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) AS inactiveStudents
+       FROM users
+       WHERE role = 'student'`
+    )
+    .get() as { totalStudents: number; activeStudents: number; inactiveStudents: number };
+
+  const semRows = db
+    .prepare(
+      `SELECT semester, COUNT(*) AS cnt
+       FROM users
+       WHERE role = 'student'
+       GROUP BY semester`
+    )
+    .all() as Array<{ semester: number; cnt: number }>;
+
+  const semesterCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  for (const sr of semRows) {
+    if (sr.semester in semesterCounts) {
+      semesterCounts[sr.semester] = Number(sr.cnt);
+    }
+  }
+
+  return {
+    students,
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    },
+    metrics: {
+      totalStudents: Number(metricsRow?.totalStudents || 0),
+      activeStudents: Number(metricsRow?.activeStudents || 0),
+      inactiveStudents: Number(metricsRow?.inactiveStudents || 0),
+      semesterCounts,
+    },
+  };
+}
+
+/**
+ * Updates a student's active status (is_active: 1 or 0).
+ * Rejects attempts to modify non-student accounts.
+ */
+export function updateAdminStudentStatus(
+  db: AppDatabase,
+  studentId: string,
+  isActive: boolean
+): { success: true; student: AdminStudentSummary } | { success: false; reason: "NOT_FOUND" | "NOT_A_STUDENT"; error: string } {
+  const cleanId = (studentId || "").trim();
+  if (!cleanId) {
+    return { success: false, reason: "NOT_FOUND", error: "Student ID is required." };
+  }
+
+  const existing = db
+    .prepare("SELECT id, name, email, role, semester, branch, xp, streak, is_active, created_at, last_active_date FROM users WHERE id = ?")
+    .get(cleanId) as any;
+
+  if (!existing) {
+    return { success: false, reason: "NOT_FOUND", error: "Student account not found." };
+  }
+
+  if (existing.role !== "student") {
+    return { success: false, reason: "NOT_A_STUDENT", error: "Cannot modify status of an administrator account." };
+  }
+
+  const nextActive = isActive ? 1 : 0;
+  db.prepare(
+    "UPDATE users SET is_active = ?, updated_at = datetime('now') WHERE id = ?"
+  ).run(nextActive, cleanId);
+
+  // If student was deactivated, revoke all their active sessions
+  if (!isActive) {
+    db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(cleanId);
+  }
+
+  return {
+    success: true,
+    student: {
+      id: existing.id,
+      name: existing.name,
+      email: existing.email,
+      semester: existing.semester,
+      branch: existing.branch,
+      xp: existing.xp,
+      streak: existing.streak,
+      isActive,
+      createdAt: existing.created_at,
+      lastActiveDate: existing.last_active_date,
+    },
+  };
+}
+
+/**
+ * Allows an administrator to reset a student's password using scrypt hashing.
+ * Rejects attempts to modify non-student accounts or set weak passwords.
+ */
+export function resetAdminStudentPassword(
+  db: AppDatabase,
+  studentId: string,
+  newPassword: string
+): { success: true; message: string } | { success: false; reason: "NOT_FOUND" | "NOT_A_STUDENT" | "WEAK_PASSWORD"; error: string } {
+  const cleanId = (studentId || "").trim();
+  if (!cleanId) {
+    return { success: false, reason: "NOT_FOUND", error: "Student ID is required." };
+  }
+
+  if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+    return { success: false, reason: "WEAK_PASSWORD", error: "New password must be at least 6 characters in length." };
+  }
+
+  const existing = db
+    .prepare("SELECT id, role FROM users WHERE id = ?")
+    .get(cleanId) as { id: string; role: string } | undefined;
+
+  if (!existing) {
+    return { success: false, reason: "NOT_FOUND", error: "Student account not found." };
+  }
+
+  if (existing.role !== "student") {
+    return { success: false, reason: "NOT_A_STUDENT", error: "Cannot reset password of an administrator account via this endpoint." };
+  }
+
+  const newScryptHash = hashPasswordScrypt(newPassword);
+  db.prepare(
+    "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?"
+  ).run(newScryptHash, cleanId);
+
+  // Revoke existing sessions so student must log in with the new password
+  db.prepare("DELETE FROM user_sessions WHERE user_id = ?").run(cleanId);
+
+  return {
+    success: true,
+    message: "Student password has been securely reset.",
+  };
+}
+
 
 

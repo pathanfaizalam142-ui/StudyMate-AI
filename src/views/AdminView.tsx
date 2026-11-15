@@ -29,6 +29,7 @@ import { AdminHeader } from './admin/AdminHeader';
 import { AdminDashboard } from './admin/AdminDashboard';
 import { AdminCurriculumView } from './admin/AdminCurriculumView';
 import { AdminSecurityView } from './admin/AdminSecurityView';
+import { AdminStudentsView } from './admin/AdminStudentsView';
 
 interface AdminViewProps {
   language: AppLanguage;
@@ -572,6 +573,14 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
               onNavigateSection={setActiveSubTab}
               subjects={subjects}
               papers={papers}
+            />
+          )}
+
+          {/* SECTION 1.5: STUDENTS & ACCOUNTS */}
+          {activeSubTab === 'students' && (
+            <AdminStudentsView
+              adminToken={adminToken}
+              onRefreshGlobalStats={loadCoreData}
             />
           )}
 

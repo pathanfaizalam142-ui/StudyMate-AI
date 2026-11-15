@@ -381,12 +381,33 @@ export default function App() {
   };
 
   const handleResetAllData = () => {
-    localStorage.clear();
+    // Phase 3: Targeted Study-Data Cleanup (Preserves accounts, session, and app preferences)
+    const studyKeysToPurge = [
+      'studymate_chat_history',
+      'studymate_saved',
+      'studymate_quizzes',
+      'studymate_notes',
+      'studymate_study_plan',
+    ];
+
+    studyKeysToPurge.forEach((key) => {
+      try {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      } catch {}
+    });
+
+    // Reset corresponding in-memory React state to clean defaults
     setSavedItems([]);
     setQuizHistory([]);
-    setActiveTab('home');
+    setUploadedNotes([]);
+    setStudyPlan({
+      overview: 'Create a new AI-powered study plan tailored to your target GTU exam schedule.',
+      dailyTargetHours: 3,
+      todayTasks: [],
+    });
+
     soundManager.play('delete');
-    window.location.reload();
   };
 
   const handleLogout = async () => {
