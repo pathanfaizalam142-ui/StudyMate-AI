@@ -1,6 +1,6 @@
 import { AppDatabase, getDatabase } from "./connection";
 import { MigrationReport, runMigrations } from "./migrate";
-import { SeedReport, seedDatabase } from "./seed";
+import { getSeedReport, isCanonicalSeedRequired, SeedReport, seedDatabase } from "./seed";
 import { upsertAdminUserAccount } from "./adminRepository";
 
 export * from "./connection";
@@ -15,30 +15,51 @@ export interface DatabaseInitResult {
   db: AppDatabase;
   migrationReport: MigrationReport;
   seedReport: SeedReport;
+  seedApplied: boolean;
 }
 
-const OWNER_ADMIN_EMAIL = "Pathanfaizalam142@gmail.com";
-const OWNER_ADMIN_SCRYPT_HASH = "c4d5e6f7a8b90123456789abcdef0123:e8b75023be82432241df6dcf39d45d76dd8f45b5779b5c8c8c0c5b0f30c1483e2778d9c01ce79ae05a8bc5f7f2e87d0adeb88b7a52db0241cff87e1d2e8f5d46";
+export interface DatabaseInitOptions {
+  forceSeed?: boolean;
+}
 
 /**
- * Initializes the canonical SQLite database (`studymate.db`), applies pending migrations
- * transactionally (with pre-migration backup if an existing DB had tables), and executes
- * the idempotent canonical curriculum/paper/question seed.
+ * Initializes the canonical SQLite database (`studymate.db` or `SQLITE_DB_PATH`),
+ * applies pending migrations transactionally (with pre-migration backup if an existing DB had tables),
+ * runs the canonical seed only when migrations were applied, canonical tables are empty, or `forceSeed` is set,
+ * and optionally bootstraps an initial administrator from environment variables ONLY when zero active admins exist.
  */
-export function initializeDatabase(customPath?: string): DatabaseInitResult {
+export function initializeDatabase(
+  customPath?: string,
+  options?: DatabaseInitOptions
+): DatabaseInitResult {
   const db = getDatabase(customPath);
   const migrationReport = runMigrations(db);
-  const seedReport = seedDatabase(db);
+  const shouldSeed =
+    Boolean(options?.forceSeed) ||
+    migrationReport.applied.length > 0 ||
+    isCanonicalSeedRequired(db);
 
-  upsertAdminUserAccount(db, {
-    email: OWNER_ADMIN_EMAIL,
-    name: "Faiz Alam Pathan",
-    precomputedScryptHash: OWNER_ADMIN_SCRYPT_HASH,
-  });
+  const seedReport = shouldSeed ? seedDatabase(db) : getSeedReport(db);
+
+  const activeAdminRow = db
+    .prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'admin' AND is_active = 1")
+    .get() as { c: number };
+  const bootstrapEmail = (process.env.BOOTSTRAP_ADMIN_EMAIL || "").trim();
+  const bootstrapPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD || "";
+  const bootstrapName = (process.env.BOOTSTRAP_ADMIN_NAME || "").trim() || "StudyMate Administrator";
+
+  if (Number(activeAdminRow.c) === 0 && bootstrapEmail && bootstrapPassword) {
+    upsertAdminUserAccount(db, {
+      email: bootstrapEmail,
+      password: bootstrapPassword,
+      name: bootstrapName,
+    });
+  }
 
   return {
     db,
     migrationReport,
     seedReport,
+    seedApplied: shouldSeed,
   };
 }

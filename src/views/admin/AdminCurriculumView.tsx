@@ -12,7 +12,7 @@ import { soundManager } from '../../services/soundManager';
 
 interface AdminCurriculumViewProps {
   subjects: any[];
-  adminToken: string;
+  adminToken?: string | null;
   onOpenHierarchyModal: (subjectId: string) => void;
   onRefreshData: () => void;
 }

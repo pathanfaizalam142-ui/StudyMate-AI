@@ -33,7 +33,7 @@ export interface PaperFormModalProps {
   initialPaper?: any | null;
   defaultSubject?: { semester: number; subjectCode: string; subjectId: string; subjectName: string } | null;
   subjects: AdminSubjectOption[];
-  adminToken: string;
+  adminToken?: string | null;
   onClose: () => void;
   onSaved: (message: string, paperId?: string) => void;
 }
@@ -406,7 +406,7 @@ export const AdminPaperFormModal: React.FC<PaperFormModalProps> = ({
 
 export interface AdminPaperQuestionsModalProps {
   paperId: string;
-  adminToken: string;
+  adminToken?: string | null;
   onClose: () => void;
   onChanged: (message: string) => void;
 }

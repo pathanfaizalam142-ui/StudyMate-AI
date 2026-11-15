@@ -48,9 +48,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   const [activeSubTab, setActiveSubTab] = useState<AdminSectionTab>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Strict Backend-Verified Admin Session State (no hardcoded credentials; scoped to browser session via sessionStorage + HttpOnly session cookie)
+  // Strict Backend-Verified Admin Session State (HttpOnly session cookie only — no token stored in Web Storage)
   const [adminUser, setAdminUser] = useState<AdminSessionUser | null>(null);
-  const [adminToken, setAdminToken] = useState<string | null>(null);
   const [verifyingSession, setVerifyingSession] = useState<boolean>(true);
 
   // Login Form State (strictly empty initial values — never hardcode secrets)
@@ -109,53 +108,33 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
     setTimeout(() => setSuccessBanner(null), 4000);
   };
 
-  // Validate admin session against backend on mount
+  // Validate admin session against backend HttpOnly cookie on mount
   useEffect(() => {
     let active = true;
-    const checkSession = async () => {
-      // Clean legacy localStorage traces
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('studymate_admin_user');
-        localStorage.removeItem('studymate_admin_token');
-      }
+    const clearLegacyAdminStorage = () => {
+      if (typeof window === 'undefined') return;
+      localStorage.removeItem('studymate_admin_user');
+      localStorage.removeItem('studymate_admin_token');
+      sessionStorage.removeItem('studymate_admin_user');
+      sessionStorage.removeItem('studymate_admin_token');
+    };
 
-      // Check sessionStorage token first
-      const storedToken =
-        typeof window !== 'undefined'
-          ? sessionStorage.getItem('studymate_admin_token')
-          : null;
+    const checkSession = async () => {
+      clearLegacyAdminStorage();
 
       try {
-        // Send storedToken if available (or rely on HttpOnly session cookie if browser sent it)
-        const res = await api.adminMe(storedToken);
+        const res = await api.adminMe();
         if (active && res?.user?.role === 'admin') {
           setAdminUser(res.user);
-          // Keep adminToken in state
-          if (storedToken) {
-            setAdminToken(storedToken);
-            sessionStorage.setItem('studymate_admin_user', JSON.stringify(res.user));
-          }
-          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+          if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/admin/login')) {
             window.history.replaceState({}, '', '/admin');
           }
         } else if (active) {
           setAdminUser(null);
-          setAdminToken(null);
-          sessionStorage.removeItem('studymate_admin_token');
-          sessionStorage.removeItem('studymate_admin_user');
-          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-            window.history.replaceState({}, '', '/admin/login');
-          }
         }
       } catch {
         if (active) {
           setAdminUser(null);
-          setAdminToken(null);
-          sessionStorage.removeItem('studymate_admin_token');
-          sessionStorage.removeItem('studymate_admin_user');
-          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-            window.history.replaceState({}, '', '/admin/login');
-          }
         }
       } finally {
         if (active) setVerifyingSession(false);
@@ -169,33 +148,36 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   }, []);
 
   const loadCoreData = useCallback(async () => {
-    if (!adminToken) return;
+    if (!adminUser) return;
     setIsLoading(true);
     setErrorBanner(null);
     try {
       const [statsRes, subjRes, papersRes] = await Promise.all([
-        api.getAdminStats(adminToken),
-        api.getAdminSubjects({}, adminToken),
-        api.getAdminPapers(
-          {
-            semester: paperSemesterFilter === 'all' ? undefined : paperSemesterFilter,
-            availability: paperAvailabilityFilter === 'all' ? undefined : paperAvailabilityFilter,
-            search: paperSearch || undefined,
-            includeAll: includeAllPapers,
-          },
-          adminToken
-        ),
+        api.getAdminStats(),
+        api.getAdminSubjects({}),
+        api.getAdminPapers({
+          semester: paperSemesterFilter === 'all' ? undefined : paperSemesterFilter,
+          availability: paperAvailabilityFilter === 'all' ? undefined : paperAvailabilityFilter,
+          search: paperSearch || undefined,
+          includeAll: includeAllPapers,
+        }),
       ]);
       setStats(statsRes.stats);
       setSubjects(subjRes.subjects || []);
       setPapers(papersRes.papers || []);
     } catch (err: any) {
-      setErrorBanner(err?.message || 'Failed to load SQLite admin data.');
+      const msg = err?.message || 'Failed to load SQLite admin data.';
+      if (/unauthorized|forbidden|session token|401|403/i.test(msg)) {
+        setAdminUser(null);
+        setLoginError(msg);
+      } else {
+        setErrorBanner(msg);
+      }
     } finally {
       setIsLoading(false);
     }
   }, [
-    adminToken,
+    adminUser,
     paperSemesterFilter,
     paperAvailabilityFilter,
     paperSearch,
@@ -203,56 +185,50 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   ]);
 
   const loadPaperQuestions = useCallback(async () => {
-    if (!adminToken) return;
+    if (!adminUser) return;
     try {
-      const res = await api.getAdminPaperQuestions(
-        {
-          semester: pqSemesterFilter === 'all' ? undefined : pqSemesterFilter,
-          subjectCode: pqSubjectFilter === 'all' ? undefined : pqSubjectFilter,
-        },
-        adminToken
-      );
+      const res = await api.getAdminPaperQuestions({
+        semester: pqSemesterFilter === 'all' ? undefined : pqSemesterFilter,
+        subjectCode: pqSubjectFilter === 'all' ? undefined : pqSubjectFilter,
+      });
       setPaperQuestions(res.questions || []);
     } catch (err: any) {
       setErrorBanner(err?.message || 'Failed to load paper questions.');
     }
-  }, [adminToken, pqSemesterFilter, pqSubjectFilter]);
+  }, [adminUser, pqSemesterFilter, pqSubjectFilter]);
 
   const loadMcqs = useCallback(async () => {
-    if (!adminToken) return;
+    if (!adminUser) return;
     try {
-      const res = await api.getAdminMcqs(
-        {
-          semester: mcqSemesterFilter === 'all' ? undefined : mcqSemesterFilter,
-          subjectCode: mcqSubjectFilter === 'all' ? undefined : mcqSubjectFilter,
-          difficulty: mcqDifficultyFilter === 'all' ? undefined : mcqDifficultyFilter,
-          search: mcqSearch || undefined,
-        },
-        adminToken
-      );
+      const res = await api.getAdminMcqs({
+        semester: mcqSemesterFilter === 'all' ? undefined : mcqSemesterFilter,
+        subjectCode: mcqSubjectFilter === 'all' ? undefined : mcqSubjectFilter,
+        difficulty: mcqDifficultyFilter === 'all' ? undefined : mcqDifficultyFilter,
+        search: mcqSearch || undefined,
+      });
       setMcqs(res.questions || []);
     } catch (err: any) {
       setErrorBanner(err?.message || 'Failed to load MCQ bank.');
     }
-  }, [adminToken, mcqSemesterFilter, mcqSubjectFilter, mcqDifficultyFilter, mcqSearch]);
+  }, [adminUser, mcqSemesterFilter, mcqSubjectFilter, mcqDifficultyFilter, mcqSearch]);
 
   useEffect(() => {
-    if (adminToken && adminUser) {
+    if (adminUser) {
       loadCoreData();
     }
-  }, [adminToken, adminUser, loadCoreData]);
+  }, [adminUser, loadCoreData]);
 
   useEffect(() => {
-    if (adminToken && adminUser && activeSubTab === 'paper_questions') {
+    if (adminUser && activeSubTab === 'paper_questions') {
       loadPaperQuestions();
     }
-  }, [adminToken, adminUser, activeSubTab, loadPaperQuestions]);
+  }, [adminUser, activeSubTab, loadPaperQuestions]);
 
   useEffect(() => {
-    if (adminToken && adminUser && activeSubTab === 'mcqs') {
+    if (adminUser && activeSubTab === 'mcqs') {
       loadMcqs();
     }
-  }, [adminToken, adminUser, activeSubTab, loadMcqs]);
+  }, [adminUser, activeSubTab, loadMcqs]);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,14 +237,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
     try {
       const res = await api.adminLogin(loginEmail.trim(), loginPassword);
       setAdminUser(res.user);
-      setAdminToken(res.token);
-      sessionStorage.setItem('studymate_admin_user', JSON.stringify(res.user));
-      sessionStorage.setItem('studymate_admin_token', res.token);
-      localStorage.removeItem('studymate_admin_user');
-      localStorage.removeItem('studymate_admin_token');
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('studymate_admin_user');
+        sessionStorage.removeItem('studymate_admin_token');
+        localStorage.removeItem('studymate_admin_user');
+        localStorage.removeItem('studymate_admin_token');
+      }
       setLoginPassword('');
       soundManager.play('save');
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/admin/login')) {
         window.history.replaceState({}, '', '/admin');
       }
       showToast(`Authenticated as ${res.user.name} (${res.user.email})`);
@@ -281,23 +258,25 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   };
 
   const handleAdminLogout = async () => {
-    await api.adminLogout(adminToken);
+    await api.adminLogout();
     setAdminUser(null);
-    setAdminToken(null);
-    sessionStorage.removeItem('studymate_admin_user');
-    sessionStorage.removeItem('studymate_admin_token');
-    localStorage.removeItem('studymate_admin_user');
-    localStorage.removeItem('studymate_admin_token');
-    soundManager.play('button_click');
+    setStats(null);
+    setSubjects([]);
+    setPapers([]);
+    setErrorBanner(null);
     if (typeof window !== 'undefined') {
-      window.history.replaceState({}, '', '/admin/login');
+      sessionStorage.removeItem('studymate_admin_user');
+      sessionStorage.removeItem('studymate_admin_token');
+      localStorage.removeItem('studymate_admin_user');
+      localStorage.removeItem('studymate_admin_token');
     }
+    soundManager.play('button_click');
   };
 
   const handleArchivePaper = async (paper: any) => {
-    if (!adminToken || !paper.paperId) return;
+    if (!adminUser || !paper.paperId) return;
     try {
-      await api.archiveAdminPaper(paper.paperId, adminToken);
+      await api.archiveAdminPaper(paper.paperId);
       showToast(`Archived paper ${paper.paperId} (${paper.subjectCode}).`);
       await loadCoreData();
     } catch (err: any) {
@@ -306,13 +285,13 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   };
 
   const handlePublishPaper = async (paper: any) => {
-    if (!adminToken || !paper.paperId) return;
+    if (!adminUser || !paper.paperId) return;
     try {
-      await api.updateAdminPaper(
-        paper.paperId,
-        { availabilityStatus: 'available', published: true, verified: true },
-        adminToken
-      );
+      await api.updateAdminPaper(paper.paperId, {
+        availabilityStatus: 'available',
+        published: true,
+        verified: true,
+      });
       showToast(`Published & verified paper ${paper.paperId} (${paper.subjectCode}).`);
       await loadCoreData();
     } catch (err: any) {
@@ -321,9 +300,9 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   };
 
   const handleDeletePaper = async (paper: any) => {
-    if (!adminToken || !paper.paperId) return;
+    if (!adminUser || !paper.paperId) return;
     try {
-      await api.deleteAdminPaper(paper.paperId, adminToken, { mode: 'delete' });
+      await api.deleteAdminPaper(paper.paperId, undefined, { mode: 'delete' });
       showToast(`Deleted paper ${paper.paperId} (${paper.subjectCode}).`);
       await loadCoreData();
     } catch (err: any) {
@@ -368,7 +347,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
 
   const handleSaveMcq = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!adminToken) return;
+    if (!adminUser) return;
     setErrorBanner(null);
     setIsSubmittingMcq(true);
     try {
@@ -379,33 +358,26 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
         newMcqOption3.trim(),
       ];
       if (editingMcq) {
-        await api.updateAdminMcq(
-          editingMcq.id,
-          {
-            questionText: newMcqQuestion.trim(),
-            options,
-            correctIndex: newMcqCorrectIdx,
-            explanation: newMcqExplanation.trim(),
-            difficulty: newMcqDifficulty,
-            language: newMcqLanguage,
-          },
-          adminToken
-        );
+        await api.updateAdminMcq(editingMcq.id, {
+          questionText: newMcqQuestion.trim(),
+          options,
+          correctIndex: newMcqCorrectIdx,
+          explanation: newMcqExplanation.trim(),
+          difficulty: newMcqDifficulty,
+          language: newMcqLanguage,
+        });
         showToast(`Updated MCQ ${editingMcq.id} in ${editingMcq.subjectCode}.`);
       } else {
-        const res = await api.createAdminMcq(
-          {
-            subjectCode: newMcqSubjectCode,
-            unitNumber: newMcqUnitNumber,
-            questionText: newMcqQuestion.trim(),
-            options,
-            correctIndex: newMcqCorrectIdx,
-            explanation: newMcqExplanation.trim(),
-            difficulty: newMcqDifficulty,
-            language: newMcqLanguage,
-          },
-          adminToken
-        );
+        const res = await api.createAdminMcq({
+          subjectCode: newMcqSubjectCode,
+          unitNumber: newMcqUnitNumber,
+          questionText: newMcqQuestion.trim(),
+          options,
+          correctIndex: newMcqCorrectIdx,
+          explanation: newMcqExplanation.trim(),
+          difficulty: newMcqDifficulty,
+          language: newMcqLanguage,
+        });
         showToast(`Created MCQ ${res.question.id} under ${res.question.subjectCode}.`);
       }
       setIsMcqModalOpen(false);
@@ -418,9 +390,9 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
   };
 
   const handleDeactivateMcq = async (questionId: string) => {
-    if (!adminToken) return;
+    if (!adminUser) return;
     try {
-      await api.deactivateAdminMcq(questionId, adminToken);
+      await api.deactivateAdminMcq(questionId);
       showToast(`Deactivated MCQ ${questionId}.`);
       await Promise.all([loadMcqs(), loadCoreData()]);
     } catch (err: any) {
@@ -438,7 +410,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
     );
   }
 
-  if (!adminUser || !adminToken) {
+  if (!adminUser) {
     return (
       <div
         id="studymate-admin-login-gate"
@@ -579,7 +551,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
           {/* SECTION 1.5: STUDENTS & ACCOUNTS */}
           {activeSubTab === 'students' && (
             <AdminStudentsView
-              adminToken={adminToken}
+              adminToken={null}
               onRefreshGlobalStats={loadCoreData}
             />
           )}
@@ -588,7 +560,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
           {activeSubTab === 'subjects' && (
             <AdminCurriculumView
               subjects={subjects}
-              adminToken={adminToken}
+              adminToken={null}
               onOpenHierarchyModal={(subjectId) => setManagingSubjectId(subjectId)}
               onRefreshData={loadCoreData}
             />
@@ -598,7 +570,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
           {activeSubTab === 'materials' && (
             <AdminStudyMaterialsPanel
               subjects={subjects}
-              adminToken={adminToken}
+              adminToken={null}
               onActionSuccess={(msg) => {
                 showToast(msg);
                 loadCoreData();
@@ -1005,7 +977,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
           initialPaper={editingPaperRecord}
           defaultSubject={defaultPaperSubject}
           subjects={subjects}
-          adminToken={adminToken}
+          adminToken={null}
           onClose={() => setPaperModalMode(null)}
           onSaved={async (msg, createdPaperId) => {
             setPaperModalMode(null);
@@ -1021,7 +993,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
       {managingQuestionsPaperId && (
         <AdminPaperQuestionsModal
           paperId={managingQuestionsPaperId}
-          adminToken={adminToken}
+          adminToken={null}
           onClose={() => setManagingQuestionsPaperId(null)}
           onChanged={async (msg) => {
             showToast(msg);
@@ -1036,7 +1008,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onExitAdmin }) => {
       {managingSubjectId && (
         <AdminSubjectUnitsTopicsModal
           subjectId={managingSubjectId}
-          adminToken={adminToken}
+          adminToken={null}
           onClose={() => setManagingSubjectId(null)}
           onChanged={async (msg) => {
             showToast(msg);

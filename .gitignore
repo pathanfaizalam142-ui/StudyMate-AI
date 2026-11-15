@@ -21,3 +21,4 @@ studymate.db*
 *.backup_*
 *.backup
 *.bak
+backups/

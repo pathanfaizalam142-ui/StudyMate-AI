@@ -60,13 +60,14 @@ import {
 
 dotenv.config();
 
-// Initialize Canonical SQLite Database (migrations + deterministic seed)
-const { db, migrationReport, seedReport } = initializeDatabase();
+// Initialize Canonical SQLite Database (migrations + conditional deterministic seed)
+const { db, migrationReport, seedReport, seedApplied } = initializeDatabase();
 console.log(
-  `[Database] Initialized studymate.db (schema=${migrationReport.schemaVersion}, subjects=${seedReport.subjectsSeeded}, units=${seedReport.unitsSeeded}, topics=${seedReport.topicsSeeded}, papers=${seedReport.papersSeeded}, questions=${seedReport.questionsSeeded}, quarantined=${seedReport.quarantinedCount})`
+  `[Database] Initialized ${db.dbPath} (schema=${migrationReport.schemaVersion}, seed=${seedApplied ? "applied" : "skipped-existing"}, subjects=${seedReport.subjectsSeeded}, units=${seedReport.unitsSeeded}, topics=${seedReport.topicsSeeded}, papers=${seedReport.papersSeeded}, questions=${seedReport.questionsSeeded}, quarantined=${seedReport.quarantinedCount})`
 );
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: "15mb" }));
@@ -577,6 +578,192 @@ app.get("/api/papers/:id", (req, res) => {
 });
 
 // ============================================================================
+// COOKIE & AUTHENTICATION RATE-LIMIT UTILITIES
+// ============================================================================
+
+const STUDENT_COOKIE_NAME = "studymate_student_session";
+const ADMIN_COOKIE_NAME = "studymate_admin_session";
+
+function parseCookie(req: express.Request, cookieName: string): string | null {
+  const cookieHeader = req.headers.cookie;
+  if (!cookieHeader || typeof cookieHeader !== "string") return null;
+  const parts = cookieHeader.split(";");
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex <= 0) continue;
+    const name = trimmed.slice(0, eqIndex).trim();
+    if (name !== cookieName) continue;
+    const rawValue = trimmed.slice(eqIndex + 1).trim();
+    if (!rawValue) return null;
+    try {
+      return decodeURIComponent(rawValue);
+    } catch {
+      return rawValue;
+    }
+  }
+  return null;
+}
+
+function isHttpsRequest(req: express.Request): boolean {
+  if (req.secure) return true;
+
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  if (forwardedProto === "https") return true;
+
+  const origin = String(req.headers.origin || "").trim().toLowerCase();
+  if (origin.startsWith("https://")) return true;
+
+  const referer = String(req.headers.referer || "").trim().toLowerCase();
+  if (referer.startsWith("https://")) return true;
+
+  // AI Studio / Cloud Run / Render Nginx proxies forward internal HTTP with X-Forwarded-Proto: http
+  // while preserving the external HTTPS host in X-Forwarded-Host / Host / APP_URL.
+  const rawHost = String(req.headers["x-forwarded-host"] || req.headers.host || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  const hostWithoutPort = rawHost.replace(/:\d+$/, "");
+  const isLoopback =
+    hostWithoutPort === "localhost" ||
+    hostWithoutPort === "127.0.0.1" ||
+    hostWithoutPort === "::1" ||
+    hostWithoutPort === "[::1]";
+
+  if (
+    hostWithoutPort.endsWith(".run.app") ||
+    hostWithoutPort.endsWith(".onrender.com")
+  ) {
+    return true;
+  }
+
+  if (
+    !isLoopback &&
+    String(process.env.APP_URL || "").trim().toLowerCase().startsWith("https://")
+  ) {
+    return true;
+  }
+
+  return !isLoopback && process.env.NODE_ENV === "production";
+}
+
+function getSessionCookieAttributes(req: express.Request): string {
+  // HTTPS contexts (including AI Studio cross-origin preview iframe) require SameSite=None; Secure; Partitioned.
+  // Plain loopback HTTP falls back to SameSite=Lax so local HTTP tooling without TLS still works.
+  if (isHttpsRequest(req)) {
+    return "Path=/; HttpOnly; SameSite=None; Secure; Partitioned";
+  }
+  return "Path=/; HttpOnly; SameSite=Lax";
+}
+
+function setStudentSessionCookie(
+  req: express.Request,
+  res: express.Response,
+  token: string,
+  rememberMe = true
+) {
+  let cookieHeader = `${STUDENT_COOKIE_NAME}=${encodeURIComponent(token)}; ${getSessionCookieAttributes(req)}`;
+  if (rememberMe) {
+    cookieHeader += `; Max-Age=${30 * 24 * 60 * 60}`;
+  }
+  res.setHeader("Set-Cookie", cookieHeader);
+}
+
+function clearStudentSessionCookie(req: express.Request, res: express.Response) {
+  const cookieHeader = `${STUDENT_COOKIE_NAME}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; ${getSessionCookieAttributes(req)}`;
+  res.setHeader("Set-Cookie", cookieHeader);
+}
+
+function setAdminSessionCookie(req: express.Request, res: express.Response, token: string) {
+  // Strict non-persistent session cookie: NO Max-Age and NO Expires.
+  const cookieHeader = `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; ${getSessionCookieAttributes(req)}`;
+  res.setHeader("Set-Cookie", cookieHeader);
+}
+
+function clearAdminSessionCookie(req: express.Request, res: express.Response) {
+  const cookieHeader = `${ADMIN_COOKIE_NAME}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; ${getSessionCookieAttributes(req)}`;
+  res.setHeader("Set-Cookie", cookieHeader);
+}
+
+interface RateLimitBucket {
+  count: number;
+  resetAt: number;
+}
+
+function createAuthRateLimiter(options: {
+  keyPrefix: string;
+  windowMs: number;
+  maxRequests: number;
+  errorMessage: string;
+}) {
+  const buckets = new Map<string, RateLimitBucket>();
+
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const now = Date.now();
+
+    // Prevent unbounded memory growth by purging expired entries when map gets large
+    if (buckets.size > 2000) {
+      for (const [k, b] of buckets.entries()) {
+        if (b.resetAt <= now) buckets.delete(k);
+      }
+    }
+
+    const clientIp = (req.ip || req.socket?.remoteAddress || "unknown").trim();
+    const key = `${options.keyPrefix}:${clientIp}`;
+    let bucket = buckets.get(key);
+
+    if (!bucket || bucket.resetAt <= now) {
+      bucket = { count: 0, resetAt: now + options.windowMs };
+      buckets.set(key, bucket);
+    }
+
+    bucket.count += 1;
+    const remaining = Math.max(0, options.maxRequests - bucket.count);
+    const retryAfterSeconds = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000));
+
+    res.setHeader("RateLimit-Limit", String(options.maxRequests));
+    res.setHeader("RateLimit-Remaining", String(remaining));
+    res.setHeader("RateLimit-Reset", String(retryAfterSeconds));
+
+    if (bucket.count > options.maxRequests) {
+      res.setHeader("Retry-After", String(retryAfterSeconds));
+      res.status(429).json({
+        error: options.errorMessage,
+        retryAfterSeconds,
+      });
+      return;
+    }
+
+    next();
+  };
+}
+
+const studentRegisterLimiter = createAuthRateLimiter({
+  keyPrefix: "auth_register",
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 10,
+  errorMessage: "Too many registration attempts. Please try again later.",
+});
+
+const studentLoginLimiter = createAuthRateLimiter({
+  keyPrefix: "auth_login",
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 12,
+  errorMessage: "Too many login attempts. Please wait a few minutes and try again.",
+});
+
+const adminLoginLimiter = createAuthRateLimiter({
+  keyPrefix: "admin_login",
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 10,
+  errorMessage: "Too many administrator login attempts. Please try again later.",
+});
+
+// ============================================================================
 // PHASE 1: BACKEND STUDENT AUTHENTICATION ENDPOINTS (Canonical SQLite Store)
 // ============================================================================
 
@@ -589,13 +776,20 @@ function extractStudentToken(req: express.Request): string | null {
   if (typeof customToken === "string" && customToken.trim()) {
     return customToken.trim();
   }
+  const cookieToken = parseCookie(req, STUDENT_COOKIE_NAME);
+  if (typeof cookieToken === "string" && cookieToken.trim()) {
+    return cookieToken.trim();
+  }
   return null;
 }
 
 // A. POST /api/auth/register
-app.post("/api/auth/register", (req, res) => {
+app.post("/api/auth/register", studentRegisterLimiter, (req, res) => {
   try {
-    const { name, email, password, semester, branch } = req.body || {};
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+
+    const { name, email, password, semester, branch, rememberMe } = req.body || {};
 
     if (!name || typeof name !== "string" || !name.trim()) {
       res.status(400).json({ error: "Full name is required." });
@@ -642,9 +836,10 @@ app.post("/api/auth/register", (req, res) => {
       return;
     }
 
+    setStudentSessionCookie(req, res, regResult.result.token, rememberMe !== false);
+
     res.status(201).json({
       success: true,
-      token: regResult.result.token,
       expiresAt: regResult.result.expiresAt,
       user: regResult.result.user,
     });
@@ -654,9 +849,12 @@ app.post("/api/auth/register", (req, res) => {
 });
 
 // B. POST /api/auth/login
-app.post("/api/auth/login", (req, res) => {
+app.post("/api/auth/login", studentLoginLimiter, (req, res) => {
   try {
-    const { email, password } = req.body || {};
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+
+    const { email, password, rememberMe } = req.body || {};
 
     if (!email || typeof email !== "string" || !email.trim() || !password || typeof password !== "string") {
       res.status(400).json({ error: "Both email address and password are required." });
@@ -672,22 +870,15 @@ app.post("/api/auth/login", (req, res) => {
     );
 
     if (authResult.success === false) {
-      if (authResult.reason === "ADMIN_ATTEMPT") {
-        res.status(403).json({ error: authResult.error });
-        return;
-      }
-      if (authResult.reason === "ACCOUNT_INACTIVE") {
-        res.status(403).json({ error: authResult.error });
-        return;
-      }
-      // Constant-time generic error to prevent email enumeration
+      // Uniform error to prevent email, role, and account-status enumeration
       res.status(401).json({ error: "Invalid email or password." });
       return;
     }
 
+    setStudentSessionCookie(req, res, authResult.result.token, rememberMe !== false);
+
     res.json({
       success: true,
-      token: authResult.result.token,
       expiresAt: authResult.result.expiresAt,
       user: authResult.result.user,
     });
@@ -710,6 +901,7 @@ app.get("/api/auth/me", (req, res) => {
 
     const profile = verifyStudentSessionToken(db, token);
     if (!profile) {
+      clearStudentSessionCookie(req, res);
       res.status(401).json({ authenticated: false, error: "Invalid or expired student session." });
       return;
     }
@@ -731,6 +923,7 @@ app.post("/api/auth/logout", (req, res) => {
 
     const token = extractStudentToken(req);
     const revoked = token ? revokeStudentSessionToken(db, token) : false;
+    clearStudentSessionCookie(req, res);
 
     res.json({
       success: true,
@@ -744,44 +937,6 @@ app.post("/api/auth/logout", (req, res) => {
 // ============================================================================
 // PHASE 3 & PHASE 4: FULL ADMIN CONTENT MANAGEMENT API (100% SQLite-Driven)
 // ============================================================================
-
-const ADMIN_COOKIE_NAME = "studymate_admin_session";
-
-function parseCookie(req: express.Request, cookieName: string): string | null {
-  const cookieHeader = req.headers.cookie;
-  if (!cookieHeader || typeof cookieHeader !== "string") return null;
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`));
-  return match ? decodeURIComponent(match[1].trim()) : null;
-}
-
-function setAdminSessionCookie(req: express.Request, res: express.Response, token: string) {
-  const isHttps =
-    req.secure ||
-    req.headers["x-forwarded-proto"] === "https" ||
-    process.env.NODE_ENV === "production";
-  
-  // Strict non-persistent session cookie: NO max-age and NO expires
-  // Browser destroys session cookie when the browser session ends.
-  // HttpOnly prevents JavaScript access, SameSite=Lax prevents CSRF, Secure when on HTTPS.
-  let cookieHeader = `${ADMIN_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax`;
-  if (isHttps) {
-    cookieHeader += "; Secure";
-  }
-  res.setHeader("Set-Cookie", cookieHeader);
-}
-
-function clearAdminSessionCookie(req: express.Request, res: express.Response) {
-  const isHttps =
-    req.secure ||
-    req.headers["x-forwarded-proto"] === "https" ||
-    process.env.NODE_ENV === "production";
-
-  let cookieHeader = `${ADMIN_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`;
-  if (isHttps) {
-    cookieHeader += "; Secure";
-  }
-  res.setHeader("Set-Cookie", cookieHeader);
-}
 
 function extractBearerToken(req: express.Request): string | null {
   const authHeader = req.headers.authorization;
@@ -828,7 +983,15 @@ function adminAccessGuard(
     return;
   }
 
-  const token = extractBearerToken(req);
+  let token = extractBearerToken(req);
+  if (!token) {
+    // Also inspect student cookie so an authenticated student attempting admin routes receives 403 Forbidden
+    const studentCookieToken = parseCookie(req, STUDENT_COOKIE_NAME);
+    if (studentCookieToken) {
+      token = studentCookieToken;
+    }
+  }
+
   if (!token) {
     res.status(401).json({
       error: "Unauthorized: Valid administrator session token is required. Frontend role headers are not trusted.",
@@ -858,23 +1021,14 @@ function adminAccessGuard(
 // 0. Admin Authentication Endpoints
 const handleAdminLogin = (req: express.Request, res: express.Response) => {
   try {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+
     const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
 
     if (!email || !password) {
       res.status(400).json({ error: "Both administrator email and password are required." });
-      return;
-    }
-
-    // Check if the account exists as a non-admin (e.g., student) to return 403 Forbidden
-    const existingUser = db
-      .prepare("SELECT id, role, is_active FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1")
-      .get(email) as { id: string; role: string; is_active: number } | undefined;
-
-    if (existingUser && existingUser.is_active === 1 && existingUser.role !== "admin") {
-      res.status(403).json({
-        error: "Forbidden: Authenticated account does not hold administrator privileges.",
-      });
       return;
     }
 
@@ -896,13 +1050,8 @@ const handleAdminLogin = (req: express.Request, res: express.Response) => {
     // Set non-persistent HttpOnly session cookie (cleared when browser session ends)
     setAdminSessionCookie(req, res, authResult.token);
 
-    // Prevent caching of authentication responses
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-    res.setHeader("Pragma", "no-cache");
-
     res.json({
       success: true,
-      token: authResult.token,
       expiresAt: authResult.expiresAt,
       user: authResult.user,
     });
@@ -911,8 +1060,8 @@ const handleAdminLogin = (req: express.Request, res: express.Response) => {
   }
 };
 
-app.post("/api/admin/auth/login", handleAdminLogin);
-app.post("/api/admin/login", handleAdminLogin);
+app.post("/api/admin/auth/login", adminLoginLimiter, handleAdminLogin);
+app.post("/api/admin/login", adminLoginLimiter, handleAdminLogin);
 
 const handleAdminMe = (req: express.Request, res: express.Response) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
@@ -930,6 +1079,7 @@ const handleAdminMe = (req: express.Request, res: express.Response) => {
     return;
   }
   if (inspection.status !== "authorized") {
+    clearAdminSessionCookie(req, res);
     res.status(401).json({ authenticated: false, error: inspection.error });
     return;
   }
@@ -2742,9 +2892,40 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`StudyMate AI Server running on http://0.0.0.0:${PORT}`);
   });
+
+  let shuttingDown = false;
+  const gracefulShutdown = (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    server.close(() => {
+      try {
+        const walResult = db.checkpointWal("TRUNCATE");
+        console.log(
+          `[Database] WAL checkpoint on ${signal}: busy=${walResult.busy}, log=${walResult.log}, checkpointed=${walResult.checkpointed}`
+        );
+      } catch (err: any) {
+        console.warn("[Database] WAL checkpoint skipped during shutdown:", err?.message || err);
+      } finally {
+        db.close();
+      }
+      process.exit(0);
+    });
+    setTimeout(() => {
+      try {
+        db.checkpointWal("PASSIVE");
+        db.close();
+      } catch {
+        // Best-effort flush before exit
+      }
+      process.exit(0);
+    }, 3000).unref();
+  };
+
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 }
 
 startServer();

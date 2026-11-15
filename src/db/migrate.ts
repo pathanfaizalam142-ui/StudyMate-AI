@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import { AppDatabase } from "./connection";
 import { computeSha256Hex, hashPasswordScrypt } from "./hash";
 import { PHASE_1_1_SCHEMA_SQL, PHASE_1_1_SCHEMA_VERSION } from "./schema";
@@ -85,7 +86,8 @@ export function runMigrations(db: AppDatabase): MigrationReport {
       );
       for (const u of users) {
         if (!u.password_hash || !/^[0-9a-f]{32}:[0-9a-f]{128}$/i.test(u.password_hash)) {
-          updatePwdStmt.run(hashPasswordScrypt(u.password_hash || "student123"), u.id);
+          const sourceSecret = u.password_hash || crypto.randomBytes(24).toString("hex");
+          updatePwdStmt.run(hashPasswordScrypt(sourceSecret), u.id);
         }
       }
 

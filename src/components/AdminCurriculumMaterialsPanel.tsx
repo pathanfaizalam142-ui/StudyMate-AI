@@ -14,7 +14,7 @@ import { api } from '../services/api';
 
 export interface SubjectUnitsTopicsModalProps {
   subjectId: string;
-  adminToken: string;
+  adminToken?: string | null;
   onClose: () => void;
   onChanged: (message: string) => void;
 }
@@ -470,7 +470,7 @@ export const AdminSubjectUnitsTopicsModal: React.FC<SubjectUnitsTopicsModalProps
 
 export interface AdminStudyMaterialsPanelProps {
   subjects: any[];
-  adminToken: string;
+  adminToken?: string | null;
   onActionSuccess: (msg: string) => void;
 }
 

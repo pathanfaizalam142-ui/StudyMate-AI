@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   AlertCircle,
   ShieldCheck,
-  Zap,
   Moon,
   Sun,
   Languages,
@@ -190,28 +189,6 @@ export const AuthView: React.FC<AuthViewProps> = ({
     }
   };
 
-  const handleDemoStudentLogin = async () => {
-    setLoading(true);
-    setErrorMessage(null);
-    soundManager.play('button_click');
-    try {
-      const res = await authService.loginAsDemo();
-      if (res.success) {
-        soundManager.play('save');
-        setSuccessBanner(
-          language === 'hi' ? 'डेमो छात्र के रूप में लॉग इन!' : 'Logged in as Demo GTU Student!'
-        );
-        setTimeout(() => {
-          onAuthSuccess(res.user);
-        }, 300);
-      }
-    } catch {
-      setErrorMessage('Could not load demo student.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div
       id="auth-container"
@@ -370,7 +347,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       setEmail(e.target.value);
                       if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                     }}
-                    placeholder="faizan@gtu.ac.in"
+                    placeholder="student@college.edu"
                     className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F0EDE4]/50 dark:bg-[#0B1120] border ${
                       errors.email ? 'border-red-500' : 'border-black/15 dark:border-[#263449]'
                     } text-xs text-black dark:text-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#004741]`}
@@ -455,23 +432,6 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   </>
                 )}
               </button>
-
-              {/* Quick Demo Access Button */}
-              <div className="pt-2 border-t border-black/10 dark:border-[#263449]">
-                <button
-                  type="button"
-                  onClick={handleDemoStudentLogin}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-black/15 dark:border-[#263449] bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-[#1E293B] text-xs font-bold text-black dark:text-[#F1F5F9] transition-all"
-                >
-                  <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                  <span>
-                    {language === 'hi'
-                      ? 'डेमो छात्र के रूप में जारी रखें (फ़ैज़ आलम)'
-                      : 'One-Click Demo Student Access (Faiz Alam)'}
-                  </span>
-                </button>
-              </div>
             </form>
           ) : (
             /* ===================== REGISTER FORM ===================== */
@@ -679,7 +639,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
         {/* Security / Architecture Notice */}
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-black/50 dark:text-[#94A3B8]">
           <ShieldCheck className="w-3.5 h-3.5 text-[#004741] dark:text-[#38BDF8]" />
-          <span>GTU Academic Security • Firebase Authentication Compatible</span>
+          <span>GTU Academic Security • Protected Server-Side Sessions</span>
         </div>
 
         {onCancel && (

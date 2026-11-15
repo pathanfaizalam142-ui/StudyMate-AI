@@ -42,6 +42,9 @@ export function hashPasswordScrypt(password: string, existingSalt?: string): str
   return `${salt}:${derivedKey}`;
 }
 
+export const DUMMY_SCRYPT_HASH =
+  "00000000000000000000000000000000:" + "0".repeat(128);
+
 export function verifyPasswordScrypt(password: string, storedHash: string): boolean {
   const parts = storedHash.split(":");
   if (parts.length !== 2) return false;

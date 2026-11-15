@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { AppDatabase } from "./connection";
-import { computeQuestionHash, computeSha256Hex, hashPasswordScrypt, verifyPasswordScrypt } from "./hash";
+import { computeQuestionHash, computeSha256Hex, DUMMY_SCRYPT_HASH, hashPasswordScrypt, verifyPasswordScrypt } from "./hash";
 
 export interface AdminDashboardStats {
   totalSemesters: number;
@@ -1139,12 +1139,12 @@ export function authenticateAdminCredentials(
       }
     | undefined;
 
-  if (!userRow || userRow.role !== "admin") {
-    return null;
-  }
+  const validPassword = verifyPasswordScrypt(
+    password,
+    userRow?.password_hash || DUMMY_SCRYPT_HASH
+  );
 
-  const validPassword = verifyPasswordScrypt(password, userRow.password_hash);
-  if (!validPassword) {
+  if (!userRow || userRow.role !== "admin" || !validPassword) {
     return null;
   }
 
@@ -3752,7 +3752,7 @@ export function deleteAdminStudyMaterial(
 }
 
 export interface UpsertAdminAccountResult {
-  status: "CREATED" | "UPDATED";
+  status: "CREATED" | "UPDATED" | "UNCHANGED";
   id: string;
   name: string;
   email: string;
@@ -3796,17 +3796,42 @@ export function upsertAdminUserAccount(
 
   const existing = db
     .prepare(
-      `SELECT id, name, email, role, is_active
+      `SELECT id, name, email, password_hash, role, is_active
        FROM users
        WHERE LOWER(email) = LOWER(?)
        LIMIT 1`
     )
     .get(cleanEmail) as
-    | { id: string; name: string; email: string; role: string; is_active: number }
+    | {
+        id: string;
+        name: string;
+        email: string;
+        password_hash: string;
+        role: string;
+        is_active: number;
+      }
     | undefined;
 
   if (existing) {
     const nextName = (input.name || "").trim() || existing.name;
+    const isAlreadyIdentical =
+      existing.name === nextName &&
+      existing.email === cleanEmail &&
+      existing.password_hash === passwordHash &&
+      existing.role === "admin" &&
+      Number(existing.is_active) === 1;
+
+    if (isAlreadyIdentical) {
+      return {
+        status: "UNCHANGED",
+        id: existing.id,
+        name: existing.name,
+        email: existing.email,
+        role: "admin",
+        isActive: true,
+      };
+    }
+
     db.prepare(
       `UPDATE users
        SET name = ?,

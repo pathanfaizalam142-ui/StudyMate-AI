@@ -31,43 +31,68 @@ import {
   User,
 } from './types';
 
+function isAdminLocation(): boolean {
+  if (typeof window === 'undefined') return false;
+  const normalizedPath =
+    (window.location.pathname || '/').replace(/\/+$/, '').toLowerCase() || '/';
+  const normalizedHash = (window.location.hash || '').replace(/\/+$/, '').toLowerCase();
+  return (
+    normalizedPath === '/admin' ||
+    normalizedPath.startsWith('/admin/') ||
+    normalizedHash === '#/admin' ||
+    normalizedHash.startsWith('#/admin/')
+  );
+}
+
 export default function App() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
 
-  const checkIsAdminPath = () =>
-    typeof window !== 'undefined' &&
-    (window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/'));
-
-  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => checkIsAdminPath());
+  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(() => isAdminLocation());
 
   // Navigation State: When on /admin*, route is 'admin'. Otherwise starts at 'home' (if logged in) or 'auth'.
   const [activeTab, setActiveTab] = useState<NavigationTab>(() => {
-    if (checkIsAdminPath()) return 'admin';
+    if (isAdminLocation()) return 'admin';
     return authService.getCurrentUser() ? 'home' : 'auth';
   });
   const [navQuery, setNavQuery] = useState<string | undefined>(undefined);
   const [navSubject, setNavSubject] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const handlePopState = () => {
-      const adminPath = checkIsAdminPath();
+    const syncRouteFromLocation = () => {
+      const adminPath = isAdminLocation();
       setIsAdminRoute(adminPath);
       if (adminPath) {
         setActiveTab('admin');
       } else {
-        setActiveTab(authService.getCurrentUser() ? 'home' : 'auth');
+        setActiveTab((prev) => {
+          if (prev !== 'admin') return prev;
+          return authService.getCurrentUser() ? 'home' : 'auth';
+        });
       }
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener('popstate', syncRouteFromLocation);
+    window.addEventListener('hashchange', syncRouteFromLocation);
+    window.addEventListener('pageshow', syncRouteFromLocation);
+    return () => {
+      window.removeEventListener('popstate', syncRouteFromLocation);
+      window.removeEventListener('hashchange', syncRouteFromLocation);
+      window.removeEventListener('pageshow', syncRouteFromLocation);
+    };
   }, []);
 
   useEffect(() => {
     const unsubscribe = authService.subscribe((user) => {
       setCurrentUser(user);
-      if (!user && !checkIsAdminPath()) {
+      if (isAdminLocation()) {
+        setIsAdminRoute(true);
+        setActiveTab('admin');
+        return;
+      }
+      if (!user) {
         setActiveTab('auth');
+      } else {
+        setActiveTab((prev) => (prev === 'auth' ? 'home' : prev));
       }
     });
     return unsubscribe;
@@ -441,7 +466,7 @@ export default function App() {
 
   // STRUCTURAL PORTAL SEPARATION:
   // /admin and /admin/login render ONLY the dedicated Admin Portal shell — never Student Navbar, Student Sidebar, or Student BottomNavigation.
-  if (isAdminRoute || activeTab === 'admin') {
+  if (isAdminLocation() || isAdminRoute || activeTab === 'admin') {
     return (
       <div
         id="studymate-admin-app"
@@ -452,7 +477,7 @@ export default function App() {
             language={language}
             theme={theme}
             onExitAdmin={() => {
-              if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+              if (typeof window !== 'undefined' && isAdminLocation()) {
                 window.history.pushState({}, '', '/');
               }
               setIsAdminRoute(false);

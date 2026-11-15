@@ -64,6 +64,36 @@ export interface HealthResponse {
   geminiConfigured: boolean;
 }
 
+async function adminFetch(
+  url: string,
+  options: {
+    method?: string;
+    token?: string | null;
+    body?: unknown;
+    fallbackError: string;
+  }
+): Promise<any> {
+  const headers: Record<string, string> = {};
+  if (options.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (options.token) {
+    headers.Authorization = `Bearer ${options.token}`;
+  }
+  const res = await fetch(url, {
+    method: options.method || 'GET',
+    headers,
+    credentials: 'include',
+    cache: 'no-store',
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.error || `${options.fallbackError} (${res.status})`);
+  }
+  return data;
+}
+
 export const api = {
   async checkHealth(): Promise<HealthResponse> {
     try {
@@ -143,6 +173,7 @@ export const api = {
     const res = await fetch('/api/gemini/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(params),
     });
     let data: any = null;
@@ -164,6 +195,7 @@ export const api = {
     const res = await fetch('/api/gemini/exam-answer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(params),
     });
     let data: any = null;
@@ -193,6 +225,7 @@ export const api = {
       const res = await fetch('/api/gemini/quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(params),
         signal: controller.signal,
       });
@@ -237,6 +270,7 @@ export const api = {
     const res = await fetch('/api/gemini/document-qa', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(params),
     });
     if (!res.ok) {
@@ -256,6 +290,7 @@ export const api = {
     const res = await fetch('/api/gemini/study-plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(params),
     });
     if (!res.ok) {
@@ -265,7 +300,7 @@ export const api = {
   },
 
   // ==========================================================================
-  // PHASE 1 & 2: STUDENT AUTHENTICATION API CLIENT (SQLite Canonical Store)
+  // PHASE 1 & 2: STUDENT AUTHENTICATION API CLIENT (HttpOnly Cookie + SQLite)
   // ==========================================================================
   async studentRegister(params: {
     name: string;
@@ -273,9 +308,9 @@ export const api = {
     password: string;
     semester: number;
     branch?: string;
+    rememberMe?: boolean;
   }): Promise<{
     success: boolean;
-    token: string;
     expiresAt: string;
     user: {
       id: string;
@@ -294,6 +329,7 @@ export const api = {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       cache: 'no-store',
       body: JSON.stringify(params),
     });
@@ -306,10 +342,10 @@ export const api = {
 
   async studentLogin(
     email: string,
-    password: string
+    password: string,
+    rememberMe = true
   ): Promise<{
     success: boolean;
-    token: string;
     expiresAt: string;
     user: {
       id: string;
@@ -328,8 +364,9 @@ export const api = {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       cache: 'no-store',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -338,7 +375,7 @@ export const api = {
     return data;
   },
 
-  async studentMe(token: string): Promise<{
+  async studentMe(token?: string | null): Promise<{
     authenticated: boolean;
     user: {
       id: string;
@@ -354,10 +391,11 @@ export const api = {
       lastActiveDate: string | null;
     };
   }> {
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch('/api/auth/me', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
+      credentials: 'include',
       cache: 'no-store',
     });
     const data = await res.json().catch(() => ({}));
@@ -373,6 +411,7 @@ export const api = {
     await fetch('/api/auth/logout', {
       method: 'POST',
       headers,
+      credentials: 'include',
       cache: 'no-store',
     }).catch(() => {});
   },
@@ -382,59 +421,40 @@ export const api = {
   // ==========================================================================
   async adminLogin(email: string, password: string): Promise<{
     success: boolean;
-    token: string;
     expiresAt: string;
     user: { id: string; name: string; email: string; role: 'admin' };
   }> {
-    const res = await fetch('/api/admin/auth/login', {
+    return adminFetch('/api/admin/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      cache: 'no-store',
-      body: JSON.stringify({ email, password }),
+      body: { email, password },
+      fallbackError: 'Admin login failed',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Admin login failed (${res.status})`);
-    }
-    return data;
   },
 
   async adminLogout(token?: string | null): Promise<void> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    await fetch('/api/admin/auth/logout', {
+    await adminFetch('/api/admin/auth/logout', {
       method: 'POST',
-      headers,
-      credentials: 'include',
-      cache: 'no-store',
-    });
+      token,
+      fallbackError: 'Admin logout failed',
+    }).catch(() => {});
   },
 
   async adminMe(token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch('/api/admin/auth/me', {
-      headers,
-      credentials: 'include',
-      cache: 'no-store',
+    const data = await adminFetch('/api/admin/auth/me', {
+      token,
+      fallbackError: 'Admin session check failed',
     });
-    const data = await res.json();
-    if (!res.ok || !data?.authenticated) {
-      throw new Error(data?.error || `Admin session check failed (${res.status})`);
+    if (!data?.authenticated) {
+      throw new Error(data?.error || 'Admin session check failed');
     }
     return data;
   },
 
   async getAdminStats(token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch('/api/admin/stats', { headers });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load admin stats (${res.status})`);
-    }
-    return data;
+    return adminFetch('/api/admin/stats', {
+      token,
+      fallbackError: 'Failed to load admin stats',
+    });
   },
 
   async getAdminSubjects(
@@ -449,27 +469,17 @@ export const api = {
     if (params?.availability && params.availability !== 'all') {
       qs.set('availability', params.availability);
     }
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/subjects${qs.toString() ? `?${qs.toString()}` : ''}`, {
-      headers,
+    return adminFetch(`/api/admin/subjects${qs.toString() ? `?${qs.toString()}` : ''}`, {
+      token,
+      fallbackError: 'Failed to load admin subjects',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load admin subjects (${res.status})`);
-    }
-    return data;
   },
 
   async getAdminSubjectById(idOrCode: string, token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/subjects/${encodeURIComponent(idOrCode)}`, { headers });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load subject detail (${res.status})`);
-    }
-    return data;
+    return adminFetch(`/api/admin/subjects/${encodeURIComponent(idOrCode)}`, {
+      token,
+      fallbackError: 'Failed to load subject detail',
+    });
   },
 
   async getAdminPapers(
@@ -503,16 +513,10 @@ export const api = {
     if (params?.search) qs.set('search', params.search);
     if (params?.includeAll) qs.set('includeAll', 'true');
 
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/papers${qs.toString() ? `?${qs.toString()}` : ''}`, {
-      headers,
+    return adminFetch(`/api/admin/papers${qs.toString() ? `?${qs.toString()}` : ''}`, {
+      token,
+      fallbackError: 'Failed to load admin papers',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load admin papers (${res.status})`);
-    }
-    return data;
   },
 
   async getAdminPaperQuestions(
@@ -529,17 +533,10 @@ export const api = {
     if (typeof paperIdOrParams === 'object' || paperIdOrParams === undefined) {
       return this.getAdminAllPaperQuestions(paperIdOrParams, token);
     }
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(
-      `/api/admin/papers/${encodeURIComponent(paperIdOrParams)}/questions`,
-      { headers }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load paper questions (${res.status})`);
-    }
-    return data;
+    return adminFetch(`/api/admin/papers/${encodeURIComponent(paperIdOrParams)}/questions`, {
+      token,
+      fallbackError: 'Failed to load paper questions',
+    });
   },
 
   async getAdminAllPaperQuestions(
@@ -563,17 +560,10 @@ export const api = {
     }
     if (params?.search) qs.set('search', params.search);
 
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(
-      `/api/admin/paper-questions${qs.toString() ? `?${qs.toString()}` : ''}`,
-      { headers }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load paper questions (${res.status})`);
-    }
-    return data;
+    return adminFetch(`/api/admin/paper-questions${qs.toString() ? `?${qs.toString()}` : ''}`, {
+      token,
+      fallbackError: 'Failed to load paper questions',
+    });
   },
 
   async getAdminMcqs(
@@ -609,16 +599,10 @@ export const api = {
     }
     if (params?.search) qs.set('search', params.search);
 
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/mcqs${qs.toString() ? `?${qs.toString()}` : ''}`, {
-      headers,
+    return adminFetch(`/api/admin/mcqs${qs.toString() ? `?${qs.toString()}` : ''}`, {
+      token,
+      fallbackError: 'Failed to load admin MCQs',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load admin MCQs (${res.status})`);
-    }
-    return data;
   },
 
   async createAdminMcq(
@@ -637,20 +621,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch('/api/admin/mcqs', {
+    return adminFetch('/api/admin/mcqs', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to create MCQ',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to create MCQ (${res.status})`);
-    }
-    return data;
   },
 
   async updateAdminMcq(
@@ -669,34 +645,20 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/mcqs/${encodeURIComponent(id)}`, {
+    return adminFetch(`/api/admin/mcqs/${encodeURIComponent(id)}`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to update MCQ',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update MCQ (${res.status})`);
-    }
-    return data;
   },
 
   async deleteAdminMcq(id: string, token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/mcqs/${encodeURIComponent(id)}`, {
+    return adminFetch(`/api/admin/mcqs/${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers,
+      token,
+      fallbackError: 'Failed to delete MCQ',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to delete MCQ (${res.status})`);
-    }
-    return data;
   },
 
   async deactivateAdminMcq(id: string, token?: string | null): Promise<any> {
@@ -708,17 +670,11 @@ export const api = {
   },
 
   async archiveAdminPaper(paperId: string, token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/papers/${encodeURIComponent(paperId)}/archive`, {
+    return adminFetch(`/api/admin/papers/${encodeURIComponent(paperId)}/archive`, {
       method: 'POST',
-      headers,
+      token,
+      fallbackError: 'Failed to archive paper',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to archive paper (${res.status})`);
-    }
-    return data;
   },
 
   async reorderAdminPaperQuestions(
@@ -726,20 +682,12 @@ export const api = {
     orderedQuestionIds: string[],
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/papers/${encodeURIComponent(paperId)}/questions/reorder`, {
+    return adminFetch(`/api/admin/papers/${encodeURIComponent(paperId)}/questions/reorder`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify({ orderedQuestionIds }),
+      token,
+      body: { orderedQuestionIds },
+      fallbackError: 'Failed to reorder paper questions',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to reorder paper questions (${res.status})`);
-    }
-    return data;
   },
 
   async createAdminUnit(
@@ -752,23 +700,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(
-      `/api/admin/subjects/${encodeURIComponent(payload.subjectId)}/units`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to create unit (${res.status})`);
-    }
-    return data;
+    return adminFetch(`/api/admin/subjects/${encodeURIComponent(payload.subjectId)}/units`, {
+      method: 'POST',
+      token,
+      body: payload,
+      fallbackError: 'Failed to create unit',
+    });
   },
 
   async updateAdminUnit(
@@ -776,34 +713,20 @@ export const api = {
     payload: { unitNumber?: number; title?: string; weightage?: string; description?: string },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/units/${encodeURIComponent(unitId)}`, {
+    return adminFetch(`/api/admin/units/${encodeURIComponent(unitId)}`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to update unit',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update unit (${res.status})`);
-    }
-    return data;
   },
 
   async deleteAdminUnit(unitId: string, token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/units/${encodeURIComponent(unitId)}`, {
+    return adminFetch(`/api/admin/units/${encodeURIComponent(unitId)}`, {
       method: 'DELETE',
-      headers,
+      token,
+      fallbackError: 'Failed to delete unit',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to delete unit (${res.status})`);
-    }
-    return data;
   },
 
   async updateAdminTopic(
@@ -811,20 +734,12 @@ export const api = {
     payload: { title?: string; summary?: string; content?: string },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/topics/${encodeURIComponent(topicId)}`, {
+    return adminFetch(`/api/admin/topics/${encodeURIComponent(topicId)}`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to update topic',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update topic (${res.status})`);
-    }
-    return data;
   },
 
   async getAdminPaperDetail(
@@ -832,18 +747,11 @@ export const api = {
     token?: string | null,
     includeUnpublished: boolean = false
   ): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
     const qs = includeUnpublished ? '?includeUnpublished=true' : '';
-    const res = await fetch(
-      `/api/admin/papers/${encodeURIComponent(paperIdOrSubjectCode)}${qs}`,
-      { headers }
-    );
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load paper detail (${res.status})`);
-    }
-    return data;
+    return adminFetch(`/api/admin/papers/${encodeURIComponent(paperIdOrSubjectCode)}${qs}`, {
+      token,
+      fallbackError: 'Failed to load paper detail',
+    });
   },
 
   async createAdminPaper(
@@ -873,20 +781,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch('/api/admin/papers', {
+    return adminFetch('/api/admin/papers', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to create paper',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to create paper (${res.status})`);
-    }
-    return data;
   },
 
   async updateAdminPaper(
@@ -906,20 +806,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/papers/${encodeURIComponent(paperId)}`, {
+    return adminFetch(`/api/admin/papers/${encodeURIComponent(paperId)}`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to update paper',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update paper (${res.status})`);
-    }
-    return data;
   },
 
   async deleteAdminPaper(
@@ -927,18 +819,12 @@ export const api = {
     token?: string | null,
     options?: { mode?: 'archive' | 'delete' }
   ): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
     const qs = options?.mode ? `?mode=${options.mode}` : '';
-    const res = await fetch(`/api/admin/papers/${encodeURIComponent(paperId)}${qs}`, {
+    return adminFetch(`/api/admin/papers/${encodeURIComponent(paperId)}${qs}`, {
       method: 'DELETE',
-      headers,
+      token,
+      fallbackError: 'Failed to delete paper',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to delete paper (${res.status})`);
-    }
-    return data;
   },
 
   async createAdminPaperQuestion(
@@ -958,20 +844,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/papers/${encodeURIComponent(paperId)}/questions`, {
+    return adminFetch(`/api/admin/papers/${encodeURIComponent(paperId)}/questions`, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to add paper question',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to add paper question (${res.status})`);
-    }
-    return data;
   },
 
   async updateAdminPaperQuestion(
@@ -991,34 +869,20 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/paper-questions/${encodeURIComponent(questionId)}`, {
+    return adminFetch(`/api/admin/paper-questions/${encodeURIComponent(questionId)}`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to update paper question',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update paper question (${res.status})`);
-    }
-    return data;
   },
 
   async deleteAdminPaperQuestion(questionId: string, token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/paper-questions/${encodeURIComponent(questionId)}`, {
+    return adminFetch(`/api/admin/paper-questions/${encodeURIComponent(questionId)}`, {
       method: 'DELETE',
-      headers,
+      token,
+      fallbackError: 'Failed to delete paper question',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to delete paper question (${res.status})`);
-    }
-    return data;
   },
 
   async updateAdminSubject(
@@ -1032,20 +896,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/subjects/${encodeURIComponent(idOrCode)}`, {
+    return adminFetch(`/api/admin/subjects/${encodeURIComponent(idOrCode)}`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to update subject',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update subject (${res.status})`);
-    }
-    return data;
   },
 
   async createAdminTopic(
@@ -1077,34 +933,20 @@ export const api = {
       token = payloadOrToken;
     }
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/subjects/${encodeURIComponent(subjectTarget)}/topics`, {
+    return adminFetch(`/api/admin/subjects/${encodeURIComponent(subjectTarget)}/topics`, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(bodyPayload),
+      token,
+      body: bodyPayload,
+      fallbackError: 'Failed to create topic',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to create topic (${res.status})`);
-    }
-    return data;
   },
 
   async deleteAdminTopic(topicId: string, token?: string | null): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/topics/${encodeURIComponent(topicId)}`, {
+    return adminFetch(`/api/admin/topics/${encodeURIComponent(topicId)}`, {
       method: 'DELETE',
-      headers,
+      token,
+      fallbackError: 'Failed to delete topic',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to delete topic (${res.status})`);
-    }
-    return data;
   },
 
   async getAdminStudyMaterials(
@@ -1127,17 +969,13 @@ export const api = {
       qs.set('materialType', params.materialType);
     }
     if (params?.search) qs.set('search', params.search);
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(
+    return adminFetch(
       `/api/admin/study-materials${qs.toString() ? `?${qs.toString()}` : ''}`,
-      { headers }
+      {
+        token,
+        fallbackError: 'Failed to load study materials',
+      }
     );
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load study materials (${res.status})`);
-    }
-    return data;
   },
 
   async createAdminStudyMaterial(
@@ -1157,20 +995,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch('/api/admin/study-materials', {
+    return adminFetch('/api/admin/study-materials', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to create study material',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to create study material (${res.status})`);
-    }
-    return data;
   },
 
   async updateAdminStudyMaterial(
@@ -1187,20 +1017,12 @@ export const api = {
     },
     token?: string | null
   ): Promise<any> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/study-materials/${encodeURIComponent(id)}`, {
+    return adminFetch(`/api/admin/study-materials/${encodeURIComponent(id)}`, {
       method: 'PUT',
-      headers,
-      body: JSON.stringify(payload),
+      token,
+      body: payload,
+      fallbackError: 'Failed to update study material',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update study material (${res.status})`);
-    }
-    return data;
   },
 
   async deleteAdminStudyMaterial(
@@ -1208,17 +1030,11 @@ export const api = {
     token?: string | null,
     _options?: { permanent?: boolean }
   ): Promise<any> {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-    const res = await fetch(`/api/admin/study-materials/${encodeURIComponent(id)}`, {
+    return adminFetch(`/api/admin/study-materials/${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers,
+      token,
+      fallbackError: 'Failed to delete study material',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to delete study material (${res.status})`);
-    }
-    return data;
   },
 
   // ==========================================================================
@@ -1245,18 +1061,10 @@ export const api = {
     if (params?.page) qs.set('page', String(params.page));
     if (params?.pageSize) qs.set('pageSize', String(params.pageSize));
 
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    const res = await fetch(`/api/admin/students${qs.toString() ? `?${qs.toString()}` : ''}`, {
-      headers,
-      credentials: 'include',
+    return adminFetch(`/api/admin/students${qs.toString() ? `?${qs.toString()}` : ''}`, {
+      token,
+      fallbackError: 'Failed to load students',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to load students (${res.status})`);
-    }
-    return data;
   },
 
   async updateAdminStudentStatus(
@@ -1264,22 +1072,12 @@ export const api = {
     isActive: boolean,
     token?: string | null
   ): Promise<{ success: boolean; student: AdminStudentSummary }> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    const res = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}/status`, {
+    return adminFetch(`/api/admin/students/${encodeURIComponent(studentId)}/status`, {
       method: 'PATCH',
-      headers,
-      credentials: 'include',
-      body: JSON.stringify({ isActive }),
+      token,
+      body: { isActive },
+      fallbackError: 'Failed to update student status',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to update student status (${res.status})`);
-    }
-    return data;
   },
 
   async resetAdminStudentPassword(
@@ -1287,21 +1085,11 @@ export const api = {
     newPassword: string,
     token?: string | null
   ): Promise<{ success: boolean; message: string }> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    const res = await fetch(`/api/admin/students/${encodeURIComponent(studentId)}/reset-password`, {
+    return adminFetch(`/api/admin/students/${encodeURIComponent(studentId)}/reset-password`, {
       method: 'POST',
-      headers,
-      credentials: 'include',
-      body: JSON.stringify({ newPassword }),
+      token,
+      body: { newPassword },
+      fallbackError: 'Failed to reset student password',
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data?.error || `Failed to reset student password (${res.status})`);
-    }
-    return data;
   },
 };

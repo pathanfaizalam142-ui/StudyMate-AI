@@ -2,7 +2,7 @@ import curriculumDataRaw from "../data/curriculumData.json" with { type: "json" 
 import { GTU_BCA_CURRICULUM } from "../data/gtuBcaCurriculum";
 import { GTU_QUESTION_PAPERS } from "../data/gtuPapersData";
 import { AppDatabase } from "./connection";
-import { computeQuestionHash, hashPasswordScrypt } from "./hash";
+import { computeQuestionHash } from "./hash";
 
 interface CanonicalTopicSource {
   id: string;
@@ -1959,40 +1959,14 @@ export function seedDatabase(db: AppDatabase): SeedReport {
       }
     }
 
-    // 7. Seed Default Admin & Student Accounts (INSERT OR IGNORE so existing users are never overwritten)
-    const insertUserIfMissing = db.prepare(`
-      INSERT OR IGNORE INTO users (
-        id, name, email, password_hash, role, semester, branch, xp, streak, is_active
-      )
-      VALUES (?, ?, ?, ?, ?, ?, 'BCA', ?, 1, 1)
-    `);
-
-    const deterministicSaltAdmin = "a1b2c3d4e5f60718293a4b5c6d7e8f90";
-    const deterministicSaltStudent = "f0e1d2c3b4a5968778695a4b3c2d1e0f";
-
-    insertUserIfMissing.run(
-      "user_admin_default",
-      "GTU Academic Admin",
-      "admin@studymate.ai",
-      hashPasswordScrypt("admin123", deterministicSaltAdmin),
-      "admin",
-      6,
-      500
-    );
-
-    insertUserIfMissing.run(
-      "user_student_default",
-      "Aarav Patel",
-      "student@studymate.ai",
-      hashPasswordScrypt("student123", deterministicSaltStudent),
-      "student",
-      3,
-      120
-    );
   });
 
   runSeedTx();
 
+  return getSeedReport(db);
+}
+
+export function getSeedReport(db: AppDatabase): SeedReport {
   const count = (table: string): number => {
     const row = db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number };
     return Number(row.c);
@@ -2011,4 +1985,25 @@ export function seedDatabase(db: AppDatabase): SeedReport {
     quizQuestionsSeeded: count("quiz_questions"),
     quarantinedCount: count("quarantined_legacy_records"),
   };
+}
+
+/**
+ * Checks read-only whether canonical curriculum, paper, quiz, and initial account data
+ * are already present so server restarts do not rewrite unchanged rows into the WAL.
+ */
+export function isCanonicalSeedRequired(db: AppDatabase): boolean {
+  const count = (table: string): number => {
+    const row = db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number };
+    return Number(row.c);
+  };
+
+  return (
+    count("semesters") === 0 ||
+    count("subjects") === 0 ||
+    count("units") === 0 ||
+    count("topics") === 0 ||
+    count("papers") === 0 ||
+    count("questions") === 0 ||
+    count("quizzes") === 0
+  );
 }

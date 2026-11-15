@@ -1,9 +1,44 @@
 import { DatabaseSync, StatementSync } from "node:sqlite";
+import fs from "node:fs";
 import path from "node:path";
 
 export interface RunResult {
   changes: number | bigint;
   lastInsertRowid: number | bigint;
+}
+
+export type WalCheckpointMode = "PASSIVE" | "FULL" | "RESTART" | "TRUNCATE";
+
+export interface WalCheckpointResult {
+  mode: WalCheckpointMode;
+  busy: number;
+  log: number;
+  checkpointed: number;
+}
+
+export interface BackupVerificationResult {
+  backupPath: string;
+  sizeBytes: number;
+  integrityCheck: string;
+  foreignKeyViolations: number;
+}
+
+/**
+ * Resolves the canonical SQLite database file path without changing the default
+ * `./studymate.db` location when `SQLITE_DB_PATH` is unset or blank.
+ */
+export function resolveDatabasePath(customPath?: string): string {
+  const candidate =
+    (typeof customPath === "string" ? customPath.trim() : "") ||
+    (typeof process.env.SQLITE_DB_PATH === "string" ? process.env.SQLITE_DB_PATH.trim() : "");
+
+  if (!candidate) {
+    return path.resolve(process.cwd(), "studymate.db");
+  }
+  if (candidate === ":memory:") {
+    return candidate;
+  }
+  return path.isAbsolute(candidate) ? candidate : path.resolve(process.cwd(), candidate);
 }
 
 /**
@@ -14,9 +49,15 @@ export class AppDatabase {
   public readonly raw: DatabaseSync;
   public readonly dbPath: string;
   private txDepth = 0;
+  private closed = false;
 
   constructor(dbPath?: string) {
-    this.dbPath = dbPath || process.env.SQLITE_DB_PATH || path.resolve(process.cwd(), "studymate.db");
+    this.dbPath = resolveDatabasePath(dbPath);
+
+    if (this.dbPath !== ":memory:") {
+      fs.mkdirSync(path.dirname(this.dbPath), { recursive: true });
+    }
+
     this.raw = new DatabaseSync(this.dbPath);
 
     // Mandatory Phase 1.1 Contract PRAGMAs on every connection open
@@ -36,6 +77,77 @@ export class AppDatabase {
 
   public pragma<T = unknown>(pragmaStatement: string): T[] {
     return this.raw.prepare(`PRAGMA ${pragmaStatement}`).all() as T[];
+  }
+
+  /**
+   * Safely checkpoints committed WAL frames back into the primary database file.
+   */
+  public checkpointWal(mode: WalCheckpointMode = "PASSIVE"): WalCheckpointResult {
+    if (this.closed || this.dbPath === ":memory:") {
+      return { mode, busy: 0, log: 0, checkpointed: 0 };
+    }
+    const rows = this.raw.prepare(`PRAGMA wal_checkpoint(${mode})`).all() as Array<{
+      busy?: number;
+      log?: number;
+      checkpointed?: number;
+    }>;
+    const row = rows[0] || {};
+    return {
+      mode,
+      busy: Number(row.busy ?? 0),
+      log: Number(row.log ?? 0),
+      checkpointed: Number(row.checkpointed ?? 0),
+    };
+  }
+
+  /**
+   * Creates a consistent single-file SQLite snapshot (including all committed WAL frames)
+   * using `VACUUM INTO`, then verifies integrity and foreign keys in read-only mode.
+   * Never overwrites an existing file or modifies the active database.
+   */
+  public createConsistentBackup(backupTargetPath?: string): BackupVerificationResult {
+    if (this.closed || this.dbPath === ":memory:") {
+      throw new Error("Cannot create file backup from a closed or in-memory database.");
+    }
+
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const targetPath = backupTargetPath
+      ? path.isAbsolute(backupTargetPath)
+        ? backupTargetPath
+        : path.resolve(process.cwd(), backupTargetPath)
+      : `${this.dbPath}.backup_${ts}`;
+
+    if (fs.existsSync(targetPath)) {
+      throw new Error(`Refusing to overwrite existing backup file: ${targetPath}`);
+    }
+
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    const escaped = targetPath.replace(/'/g, "''");
+    this.raw.exec(`VACUUM INTO '${escaped}';`);
+
+    const ro = new DatabaseSync(`file:${targetPath}?mode=ro`, { readOnly: true });
+    try {
+      const integrityRow = ro.prepare("PRAGMA integrity_check").get() as
+        | { integrity_check?: string }
+        | undefined;
+      const integrityCheck = integrityRow?.integrity_check || "unknown";
+      const fkViolations = ro.prepare("PRAGMA foreign_key_check").all();
+
+      if (integrityCheck !== "ok" || fkViolations.length > 0) {
+        throw new Error(
+          `Backup verification failed (integrity=${integrityCheck}, fkViolations=${fkViolations.length})`
+        );
+      }
+
+      return {
+        backupPath: targetPath,
+        sizeBytes: fs.statSync(targetPath).size,
+        integrityCheck,
+        foreignKeyViolations: fkViolations.length,
+      };
+    } finally {
+      ro.close();
+    }
   }
 
   /**
@@ -84,7 +196,16 @@ export class AppDatabase {
     };
   }
 
+  public isClosed(): boolean {
+    return this.closed;
+  }
+
   public close(): void {
+    if (this.closed) return;
+    this.closed = true;
+    if (singletonDb === this) {
+      singletonDb = null;
+    }
     this.raw.close();
   }
 }
@@ -95,8 +216,12 @@ export function getDatabase(customPath?: string): AppDatabase {
   if (customPath) {
     return new AppDatabase(customPath);
   }
-  if (!singletonDb) {
-    singletonDb = new AppDatabase();
+  const desiredPath = resolveDatabasePath();
+  if (!singletonDb || singletonDb.isClosed() || singletonDb.dbPath !== desiredPath) {
+    if (singletonDb && !singletonDb.isClosed()) {
+      singletonDb.close();
+    }
+    singletonDb = new AppDatabase(desiredPath);
   }
   return singletonDb;
 }

@@ -1,5 +1,5 @@
 import { AppDatabase } from "./connection";
-import { computeQuestionHash, computeSha256Hex, hashPasswordScrypt, verifyPasswordScrypt } from "./hash";
+import { computeQuestionHash, computeSha256Hex, DUMMY_SCRYPT_HASH, hashPasswordScrypt, verifyPasswordScrypt } from "./hash";
 import { QuizQuestion } from "../../serverQuizBank";
 import crypto from "node:crypto";
 
@@ -835,31 +835,13 @@ export function authenticateStudentCredentials(
       }
     | undefined;
 
-  if (!userRow) {
-    return { success: false, reason: "INVALID_CREDENTIALS", error: "Invalid email or password." };
-  }
+  const isValid = verifyPasswordScrypt(
+    rawPassword,
+    userRow?.password_hash || DUMMY_SCRYPT_HASH
+  );
 
-  // Reject administrators from student login endpoint to maintain strict role separation
-  if (userRow.role === "admin") {
-    return {
-      success: false,
-      reason: "ADMIN_ATTEMPT",
-      error: "Administrator accounts must authenticate via the Admin Portal at /admin/login.",
-    };
-  }
-
-  // Reject inactive accounts
-  if (userRow.is_active !== 1) {
-    return {
-      success: false,
-      reason: "ACCOUNT_INACTIVE",
-      error: "This student account is inactive. Please contact an administrator.",
-    };
-  }
-
-  // Verify scrypt password hash
-  const isValid = verifyPasswordScrypt(rawPassword, userRow.password_hash);
-  if (!isValid) {
+  // Reject invalid password, non-student role, or inactive account uniformly to prevent enumeration
+  if (!userRow || !isValid || userRow.role !== "student" || userRow.is_active !== 1) {
     return { success: false, reason: "INVALID_CREDENTIALS", error: "Invalid email or password." };
   }
 
